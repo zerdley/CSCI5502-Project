@@ -1,0 +1,25 @@
+[project]
+name = "csci5502-drug-shortages"
+version = "0.1.0"
+description = "Predicting US drug shortages from federal supply-side signals (CSCI 5502, CU Boulder)"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=2.0",
+    "scipy>=1.14",
+    "scikit-learn>=1.5",
+    "matplotlib>=3.9",
+    "pyarrow>=17.0",
+    "jupyter>=1.1",
+    "nbformat>=5.10",
+    "nbclient>=0.10",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
