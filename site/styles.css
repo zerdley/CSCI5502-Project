@@ -1,0 +1,21 @@
+/* Small tweaks */
+.navbar-brand { font-weight: 600; }
+
+figure figcaption {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+blockquote {
+  border-left: 3px solid #cfd8dc;
+  color: #37474f;
+}
+
+/* Flag unfinished content during drafting. */
+.todo {
+  background: #fff8e1;
+  border-left: 4px solid #ffb300;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border-radius: 3px;
+}

@@ -28,23 +28,19 @@ shortage history, product lifecycle records, approval data, and Medicare utiliza
 which drugs enter shortage and whether supply-side withdrawal is measurable *before* a shortage
 is formally declared.
 
-The unit of analysis is **active ingredient × route of administration** (2,897 approved
+The unit of analysis is **active ingredient &times; route of administration** (2,897 approved
 prescription units). Validation is temporal: train on earlier years, test on later ones.
 
 ## Research Questions
 
-1. **(Descriptive)** How have the incidence, duration, and stated causes of US drug shortages
-   changed from 2019–2026, and to what extent does FDA's live shortage file understate that
-   history?
-2. **(Relationship)** Do package-level NDC delistings increase in the months preceding a declared
+1. **(Relationship)** Do package-level NDC delistings increase in the months preceding a declared
    shortage, and what is the typical lead time?
-3. **(Comparative / explanatory)** Which product characteristics — route and dosage form, generic
-   competition, labeler and applicant counts, Medicare spending and claim volume, recall history —
-   distinguish ingredient × route units that enter shortage from those that do not?
-4. **(Predictive)** Using only information available at time *t*, how well can ingredient × route
-   units be ranked by probability of entering shortage within the next 6 and 12 months, under
-   temporal validation?
-5. **(Robustness)** Does predictive performance vary across shortage-cause regimes — periods
+2. **(Comparative / explanatory)** Which product characteristics — route and dosage form, generic
+   competition, labeler and applicant counts, Medicare spending and claim volume, and recall
+   history — distinguish ingredient &times; route units that enter shortage from those that do not?
+3. **(Predictive)** Using only information available at time *t*, how well can ingredient &times; route
+   units be ranked by probability of entering shortage within the next 6 and 12 months?
+4. **(Robustness)** Does predictive performance vary across shortage-cause regimes — periods
    dominated by manufacturing and quality problems versus periods dominated by demand increases?
 
 ## Data Sources

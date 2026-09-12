@@ -1,0 +1,77 @@
+---
+title: "Proposal Overview"
+---
+
+## Summary
+
+**Problem.** Drug shortages disrupt patient care and impose large costs on hospitals and
+pharmacies. Warning time before a shortage is declared is highly variable, which makes
+preparation expensive and poorly targeted.
+
+**Goal.** Determine whether shortage onset can be anticipated from public federal data, and
+identify which supply-side signals carry advance warning. The project produces a calibrated
+probability that a given drug enters shortage within a defined window, together with evidence
+about which product characteristics drive that risk.
+
+**Unit of analysis.** Active ingredient &times; route of administration — 2,897 approved prescription
+units.
+
+**Validation.** Temporal only: train on earlier years, test on later ones.
+
+## Planned Data Sources
+
+| Dataset | Provider | Role | Approx. size |
+|---|---|---|---|
+| Archived CDER shortage CSVs | Internet Archive | Labels: onset and resolution dates | 102 captures, 2019–2026 |
+| Drug Shortages (live) | openFDA | Current shortage state, NDC keys | 1,634 records |
+| NSDE product lifecycle | openFDA | Supply-side panel; retains delisted products | 667,457 records |
+| NDC Directory | openFDA | Product master, route and dosage form | 137,733 records |
+| Drug Enforcement (recalls) | openFDA | Recall history | 17,899 records |
+| Orange Book | FDA | Approval type, ANDA counts | 48,663 products |
+| Medicare Part B / Part D | CMS | Demand, price trend, manufacturer counts | 15,335 rows |
+
+All sources are US federal public-domain data, available as bulk downloads without
+authentication. Total download is approximately 100 MB. The NDC product code is the primary join
+key.
+
+## Current Research Questions
+
+The five questions are stated in full on the [Research Questions](questions.qmd) page. In brief: whether
+manufacturers exit before shortages are declared (RQ1); which characteristics distinguish
+shortage-prone drugs (RQ2); how predictable onset is under temporal validation (RQ3); and whether
+that predictability survives changes in the dominant causes of shortage (RQ4).
+
+## Major Constraints
+
+**The live shortage file is a snapshot, not a history.** FDA purges resolved shortages after
+approximately six months. Labels must be reconstructed from archived captures; this is done, but
+it introduces its own coverage limits (below).
+
+**Short shortages are under-represented.** The archived capture series has two gaps exceeding
+FDA's purge window, and the median lag between a record's posting date and the first capture
+containing it is 116 days. Episodes that open and close between captures are invisible. Both
+effects bias the recovered record toward longer shortages, and we report this rather than
+treating the panel as complete.
+
+**Target leakage is a documented, severe risk on this task.** Any feature derived from how long a
+record has been posted predicts the label almost perfectly while being useless in practice. The
+team fixes a banned-feature list before modeling and treats unexpectedly high performance as a
+leakage bug until proven otherwise.
+
+**The process is not stationary.** FDA's attribution of shortage causes inverts between reporting
+periods, so results are reported by period rather than pooled.
+
+**Licensing.** openFDA and CDER data are public domain and freely redistributable. ASHP /
+University of Utah shortage bulletins are copyrighted for personal use only; they are not used or
+redistributed in this project.
+
+## Changes Since Milestone 0
+
+The approved Milestone 0 proposal remains the basis of this project.
+
+**Related work was identified and the contribution sharpened.** Two public GitHub projects
+attempt a similar reconstruction. Neither is peer-reviewed and neither covers the full approved
+prescription universe. The [Background](background.qmd) page states what they establish and where
+this project differs — principally the full ingredient &times; route universe rather than a WHO
+Essential Medicines List subset, and the use of NSDE supply-side lifecycle data that neither
+project employs. This improves focus by making the contribution explicit rather than assumed.

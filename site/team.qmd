@@ -1,0 +1,44 @@
+---
+title: "Team"
+---
+
+::: {.todo}
+**Drafting note — remove before submission.** Bios, photos, and optional professional links still
+need to be supplied by each team member. Photos go in `site/figures/team/` and should be
+professional headshots or equivalent. Each bio should be 2–4 sentences: background, relevant
+coursework or experience, and what the member brings to this project.
+:::
+
+## Zach Erdley
+
+![](figures/team/zach-erdley.jpg){width=180 .rounded}
+
+I am a Data Science Master's student from Denver, Colorado. I came to the program from a computer science undergraduate background, and I bring substantial prediction and model calibration experience to the project.
+
+**Responsibilities:** *To be confirmed with the team.*
+
+**Links:** [LinkedIn](https://www.linkedin.com/in/zach-erdley-93a091256)
+
+---
+
+## Dylan Hudson
+
+![](figures/team/dylan-hudson.jpg){width=180 .rounded}
+
+*Bio to be added.*
+
+**Responsibilities:** *To be confirmed with the team.*
+
+**Links:** *Optional — GitHub, LinkedIn, or portfolio if the member chooses to share.*
+
+---
+
+## Mar Lonsway
+
+![](figures/team/mar-lonsway.jpg){width=180 .rounded}
+
+*Bio to be added.*
+
+**Responsibilities:** *To be confirmed with the team.*
+
+**Links:** *Optional — GitHub, LinkedIn, or portfolio if the member chooses to share.*

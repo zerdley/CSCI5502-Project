@@ -1,0 +1,42 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Predicting US Drug Shortages"
+  description: "CSCI 5502 group project — University of Colorado Boulder"
+  page-navigation: true
+  navbar:
+    left:
+      - href: index.qmd
+        text: Introduction
+      - href: questions.qmd
+        text: Research Questions
+      - href: background.qmd
+        text: Background
+      - href: proposal.qmd
+        text: Proposal Overview
+      - href: team.qmd
+        text: Team
+    right:
+      - icon: github
+        href: https://github.com/zerdley/CSCI5502-Project
+        aria-label: GitHub repository
+  page-footer:
+    center: "CSCI 5502 — Data Mining — Fall 2026 — CU Boulder"
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    code-tools: false
+    fig-cap-location: bottom
+
+bibliography: references.bib
+
+execute:
+  freeze: auto
+  echo: false
+  warning: false
