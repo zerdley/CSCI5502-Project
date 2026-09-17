@@ -36,7 +36,7 @@ key.
 
 ## Current Research Questions
 
-The five questions are stated in full on the [Research Questions](questions.qmd) page. In brief: whether
+The four questions are stated in full on the [Research Questions](questions.qmd) page. In brief: whether
 manufacturers exit before shortages are declared (RQ1); which characteristics distinguish
 shortage-prone drugs (RQ2); how predictable onset is under temporal validation (RQ3); and whether
 that predictability survives changes in the dominant causes of shortage (RQ4).

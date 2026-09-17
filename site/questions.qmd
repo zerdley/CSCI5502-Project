@@ -39,8 +39,7 @@ counts, Medicare spending and claim volume, and recall history — distinguish i
 units that enter shortage from those that do not?
 
 **Why it matters.** Beyond prediction, purchasers and regulators need to know *which* attributes
-carry risk. Our preliminary work suggests at least one widely held assumption is backwards, which
-makes this worth testing explicitly rather than assuming.
+carry risk.
 
 **Evidence.** Group comparisons and effect sizes across the panel, with attention to whether
 nominal manufacturer counts measure supply redundancy or market commoditization.

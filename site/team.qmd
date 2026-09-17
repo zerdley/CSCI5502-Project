@@ -2,13 +2,6 @@
 title: "Team"
 ---
 
-::: {.todo}
-**Drafting note — remove before submission.** Bios, photos, and optional professional links still
-need to be supplied by each team member. Photos go in `site/figures/team/` and should be
-professional headshots or equivalent. Each bio should be 2–4 sentences: background, relevant
-coursework or experience, and what the member brings to this project.
-:::
-
 ## Zach Erdley
 
 ![](figures/team/zach-erdley.jpg){width=180 .rounded}
