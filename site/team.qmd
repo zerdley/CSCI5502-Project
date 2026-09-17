@@ -15,7 +15,7 @@ coursework or experience, and what the member brings to this project.
 
 I am a Data Science Master's student from Denver, Colorado. I came to the program from a computer science undergraduate background, and I bring substantial prediction and model calibration experience to the project.
 
-**Responsibilities:** *To be confirmed with the team.*
+**Responsibilities:** Coordination and data
 
 **Links:** [LinkedIn](https://www.linkedin.com/in/zach-erdley-93a091256)
 
@@ -27,7 +27,7 @@ I am a Data Science Master's student from Denver, Colorado. I came to the progra
 
 *Bio to be added.*
 
-**Responsibilities:** *To be confirmed with the team.*
+**Responsibilities:** Analysis/modeling and visualization
 
 **Links:** *Optional — GitHub, LinkedIn, or portfolio if the member chooses to share.*
 
@@ -39,6 +39,6 @@ I am a Data Science Master's student from Denver, Colorado. I came to the progra
 
 *Bio to be added.*
 
-**Responsibilities:** *To be confirmed with the team.*
+**Responsibilities:** Documentation and reproducibility
 
 **Links:** *Optional — GitHub, LinkedIn, or portfolio if the member chooses to share.*
