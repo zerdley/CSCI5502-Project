@@ -2,18 +2,48 @@
 title: "Research Questions"
 ---
 
-These four questions collectively support the project goal: understanding whether US drug
-shortages can be anticipated from public federal data, and what supply-side signals precede them.
-All are answerable with the datasets described in the [Proposal Overview](proposal.qmd).
+These four questions support the project goal: understanding whether US drug
+shortages can be anticipated from public federal data, and if so, what supply-side signals precede them.
 
-The unit of analysis throughout is **active ingredient &times; route of administration** (2,897 approved
-prescription units). This matters because published shortage counts differ by an order of
-magnitude depending on whether they count molecules, package codes, or list entries; fixing the
-grain up front keeps results comparable.
+The unit of analysis throughout is active ingredient per route of administration (2,897 total approved
+prescription units in the data). This matters because published shortage counts differ by an order of
+magnitude depending on whether they count molecules, package codes, or list entries.
+
+---
+## RQ1: How predictable is shortage onset?
+
+*Predictive.*
+
+Using only information available at time *t*, how well can ingredient per route units be ranked by
+probability of entering shortage within the next 6 and 12 months?
+
+**Why it matters.** This is an operational question that would allow facilities to prepare for shortages, and possibly avoid negative consequences. 
+A ranked watchlist is useful to a hospital
+pharmacy even if it not perfect, as long as its performance is honestly characterized.
+
+**Evidence.** Temporal validation: train through year *t*, test on *t+1 (never random
+k-fold). Performance reported as PR-AUC against the base rate
+alongside ROC-AUC, with a predetermined list of banned leakage features; any feature derived from
+how long a record has been posted encodes the answer and is excluded by construction.
+
 
 ---
 
-## RQ1 — Do manufacturers exit before a shortage is declared?
+## RQ2: What distinguishes drugs that go into shortage?
+
+*Comparative / explanatory.*
+
+Which product characteristics, e.g. route and dosage form, generic competition, labeler and applicant
+counts, Medicare spending and claim volume, and recall history, distinguish ingredient/route
+units that enter shortage from those that do not?
+
+**Why it matters:** Beyond prediction of the actual shortages, purchasers and regulators need to know which features
+carry risk.
+
+**Evidence.** Group comparisons and effect sizes across the panel.
+
+---
+## RQ3: — Do manufacturers exit before a shortage is declared?
 
 *Relationship / leading indicator.*
 
@@ -22,7 +52,8 @@ the typical lead time?
 
 **Why it matters.** This is the project's central mechanism question. A declared shortage is a
 lagging indicator; product delisting is recorded independently and may move earlier. If exits
-precede declarations with usable lead time, that is directly actionable for purchasers.
+precede declarations with usable lead time, delisting may be predicted or identified independently
+as an actionable parameter for downstream facilities. 
 
 **Evidence.** An event study comparing the change in count of active NDCs per unit over the
 12 months before a shortage onset against matched control windows, using the NSDE lifecycle file,
@@ -30,49 +61,16 @@ which retains delisted products that the current NDC Directory drops.
 
 ---
 
-## RQ2 — What distinguishes drugs that go into shortage?
-
-*Comparative / explanatory.*
-
-Which product characteristics — route and dosage form, generic competition, labeler and applicant
-counts, Medicare spending and claim volume, and recall history — distinguish ingredient &times; route
-units that enter shortage from those that do not?
-
-**Why it matters.** Beyond prediction, purchasers and regulators need to know *which* attributes
-carry risk.
-
-**Evidence.** Group comparisons and effect sizes across the panel, with attention to whether
-nominal manufacturer counts measure supply redundancy or market commoditization.
-
----
-
-## RQ3 — How predictable is shortage onset?
-
-*Predictive.*
-
-Using only information available at time *t*, how well can ingredient &times; route units be ranked by
-probability of entering shortage within the next 6 and 12 months?
-
-**Why it matters.** This is the operational question. A ranked watchlist is useful to a hospital
-pharmacy even if it is far from perfect, provided its performance is honestly characterized.
-
-**Evidence.** Temporal validation only — train through year *t*, test on *t+1*; never random
-k-fold, because shortages cluster in time. Performance reported as PR-AUC against the base rate
-alongside ROC-AUC, with a pre-registered list of banned leakage features. Any feature derived from
-how long a record has been posted encodes the answer and is excluded by construction.
-
----
-
-## RQ4 — Does predictability hold as the causes of shortage change?
+## RQ4: Does predictability hold as the causes of shortage change?
 
 *Robustness / explanatory.*
 
-Does predictive performance vary across shortage-cause regimes — periods dominated by
+Does predictive performance vary across shortage-cause regimes, i.e. periods dominated by
 manufacturing and quality problems versus periods dominated by demand increases?
 
-**Why it matters.** FDA's own cause attribution inverts across reporting periods, and the 2012
-FDASIA notification requirement is a structural break. A model that only works in one regime is a
-different, and much weaker, claim than one that generalizes.
+**Why it matters.** FDA's own cause attribution inverts across reporting periods. A model that only works in one regime is a
+different, and weaker, tool than one that successfully generalizes across cause regimes. 
 
 **Evidence.** Performance reported by period rather than pooled, with the dominant reason code
-distribution reported alongside it.
+distribution reported alongside it to allow segementation by FDA-listed cause and model performance assessment
+at a more granular level.  
