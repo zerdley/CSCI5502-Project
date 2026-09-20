@@ -43,7 +43,7 @@ carry risk.
 **Evidence.** Group comparisons and effect sizes across the panel.
 
 ---
-## RQ3: — Do manufacturers exit before a shortage is declared?
+## RQ3: Do manufacturers exit before a shortage is declared?
 
 *Relationship / leading indicator.*
 
