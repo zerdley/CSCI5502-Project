@@ -9,9 +9,9 @@
 
 ## Team
 
-Zach Erdley 
-Dylan Hudson 
-Mar Lonsway 
+Zach Erdley \
+Dylan Hudson \
+Mar Lonsway \
 
 ## Project Goal
 
