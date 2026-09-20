@@ -11,7 +11,7 @@
 
 Zach Erdley \
 Dylan Hudson \
-Mar Lonsway \
+Mar Lonsway 
 
 ## Project Goal
 
