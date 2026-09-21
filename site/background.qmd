@@ -2,66 +2,61 @@
 title: "Background & Related Work"
 ---
 
-Work on drug shortages falls into three groups: government analyses that characterize the problem
+Work on drug shortages falls into roughly three categories: government analyses that characterize the problem
 and its causes, peer-reviewed attempts to predict shortages from operational data, and public
-implementations that use FDA's own shortage feed. Each shapes this project differently.
+implementations that use FDA's own shortage feed.
 
-## What Government Analyses Establish
+## Government Analyses 
 
-**Shortages are an economic phenomenon, not primarily a manufacturing one.** FDA's Drug Shortages
+The FDA's Drug Shortages
 Task Force examined 163 drugs that went into shortage between 2013 and 2017 and concluded that the
-root causes are structural: there is little incentive to produce low-margin generic drugs, the
-market does not reward manufacturers for mature quality systems, and contracting practices push
+root causes are economic: there is little incentive to produce low-margin generic drugs, the
+market does not reward manufacturers for mature quality systems, and manufacturer contracting practices push
 prices toward unsustainable levels [@fda2019roots]. The report's central insight for this project
-is that shortage risk is predictable *in principle* because it is tied to observable market
-characteristics — margin pressure, genericization, and quality history — rather than to random
-manufacturing accidents.
+is that shortage risk is predictable because it is tied to observable market
+characteristics, eg. margin pressure, genericization, and quality history, rather than to random
+manufacturing accidents, which would be inherently unpredictable from the data. 
 
-**Specific, measurable factors correlate with shortage risk.** GAO found that shortages
+The Government Accountability Office (GAO) found that shortages
 concentrate in sterile injectables and older generic drugs, and are strongly associated with
 identifiable market conditions rather than distributed evenly across the drug supply
-[@gao2016factors]. This directly motivates RQ2: the attributes GAO identifies — dosage form,
-generic status, market age — are all recoverable from the NDC Directory and Orange Book, which
-makes them testable at scale.
+[@gao2016factors]. This directly motivates RQ2: the attributes GAO identifies, dosage form,
+generic status, market age, are all recoverable from the NDC Directory and Orange Book.
+The GAO's 2025 assessment found 102
+active shortages as of July 2024 and noted that while the number of new shortages has generally
+declined since 2020, shortages are lasting longer [@gao2025coordination]. The persistence of the problem
+despite a decade of policy attention shows the need for accurate modeling and analysis. 
 
-**The problem is ongoing and the response remains reactive.** GAO's 2025 assessment found 102
-active shortages as of July 2024 and noted that while the number of *new* shortages has generally
-declined since 2020, shortages are lasting *longer* [@gao2025coordination]. It also found HHS
-lacks a coordinating mechanism across its shortage activities. The persistence of the problem
-despite a decade of policy attention is what makes advance warning valuable.
-
-**Duration varies enormously by route of administration.** ASPE's analysis of 2018–2023 found 258
+ASPE's analysis of 2018–2023 found 258
 unique active ingredients in shortage, represented by 1,961 products, with median duration of 4.6
 years for injectables versus 1.6 years for orals and 2.2 years for topicals [@aspe2025shortages].
-Two things follow. First, it validates our choice of **ingredient &times; route** as the unit of
-analysis — route is not a minor covariate, it is a primary axis of variation. Second, ASPE's
+Two things follow. First, it validates our choice of ingredient by route as the unit of
+analysis. Second, ASPE's
 published survival medians give us an external benchmark to validate our reconstructed duration
 estimates against.
 
-## What the Prediction Literature Establishes
+## Other Literature on Prediction 
 
-**Shortages are predictable from operational data, at moderate accuracy.** Pall et al. predicted
-shortage severity one month ahead using Canadian pharmacy dispensing data, reaching roughly 69%
+Pall et al. predicted shortage severity one month ahead using Canadian pharmacy dispensing data, reaching roughly 69%
 accuracy across four severity classes without any manufacturer or supplier inventory data
 [@pall2023predicting]. Their most informative features were consumption-side: days of supply per
 patient, total days of supply, and prior shortage history. This is important context for our
-expectations — it suggests meaningful signal exists, while setting a realistic accuracy
+expectations, as it suggests meaningful signal exists, while setting a realistic accuracy
 expectation well short of near-perfect.
 
-**Duration and cause are separately modelable.** Roe et al. built two models on 1,054
+Roe et al. built two models on 1,054
 regulatory-reported South Korean shortage cases from 2018–2024: one estimating shortage duration
 ranges (62% accuracy), one classifying cause into seven categories (>70% weighted F1)
-[@roe2026korea]. Shortage incidence *frequency* — how often a drug has been short before — was
-their most influential variable. Two lessons carry over: recurrence history is a strong feature
+[@roe2026korea]. Past shortage incidence frequency, i.e. how often a drug has entered shortage before was
+their most influential variable. This suggests that recurrence history is a strong feature
 and we should construct it explicitly, and duration is a legitimate modeling target in its own
-right, which supports our stated contingency framing.
+right.
 
-**Neither study can be directly transferred.** Both rely on data we do not have. Pall et al. use
+It should be noted that both studies rely on data we do not have. Pall et al. use
 pharmacy dispensing records from a single health system; Roe et al. use a national regulatory
 reporting system with mandatory cause attribution. In the US, no equivalent public dispensing
 panel exists, and FDA's shortage file carries cause codes that are unnormalized and incomplete.
-Our approach substitutes *supply-side* signals — product lifecycle records and approval data —
-for the consumption-side data these studies depend on.
+Our approach substitutes more supply-side signals instead of the demand data.
 
 ## Public Implementations Using FDA Data
 
@@ -73,40 +68,35 @@ panel and an 8,876-row training set with 60- and 90-day forward labels. This is 
 framing and confirms the reconstruction approach is sound. Its scope limit is that it covers only
 WHO Essential Medicines List molecules.
 
-`Anirudh-Sohaney/medi-tracker` [@sohaney2026] provides an NDC9 &times; supplier &times; month panel of 254,316
+`Anirudh-Sohaney/medi-tracker` [@sohaney2026] provides an NDC9 per supplier per month panel of 254,316
 rows spanning 2012–2026. It is useful as a cross-check, but it is a duration panel rather than a
-balanced onset panel — `shortage_active = 1` on 252,886 of 254,316 rows — and its pre-2020 months
+balanced onset panel, `shortage_active = 1` on 252,886 of 254,316 rows, and its pre-2020 months
 are backfilled rather than observed.
 
-Neither is peer-reviewed; both are personal or student projects with no associated publication.
+## The Modeling Gaps We Intend to Address:
 
-## The Gap This Project Addresses
-
-Three gaps follow from the above.
-
-**The historical record is destroyed by default, and most work inherits that limitation.** FDA
-purges resolved shortages after roughly six months; as of September 2026 the live file retained 7
+ FDA purges resolved shortages after roughly six months; as of September 2026 the live file retained 7
 resolved records out of 1,634. Onset counts taken from the live file are severely length-biased.
 We reconstruct 10,967 episodes across 1,416 drugs from 102 archived captures, of which 2,028 carry
 resolution dates.
 
-**Supply-side lifecycle data is unused.** FDA's NSDE file retains product records after delisting,
-where the current NDC Directory drops them. This is not a minor convenience: historical shortage
+FDA's NSDE file retains product records after delisting,
+where the current NDC Directory drops them. Historical shortage
 records point at products that have since been delisted, so joining them to the live directory
-discards more than half the data, and discards it *non-randomly* — biased toward exactly the
+discards more than half the data, and discards it non-randomly, i.e.  biased toward exactly the
 discontinued products a shortage model should care about. NSDE also enables a monthly count of
-active package codes per ingredient &times; route going back to 2010, which is what makes RQ1's
-leading-indicator question answerable at all. Neither prior implementation uses it.
+active package codes per ingredient-route going back to 2010, which is what makes RQ1's
+leading-indicator question answerable at all.
 
-**Coverage is narrower than the problem.** Prior public work restricts itself to WHO Essential
+The prior public work restricts itself to WHO Essential
 Medicines List molecules. We work over the full approved prescription universe (2,897 ingredient
-&times; route units) which is both broader and, importantly, selected on criteria unrelated to
+per route units) which is both broader and, importantly, selected on criteria unrelated to
 perceived importance.
 
 Together these define the contribution: a shortage-onset analysis built on reconstructed labels
-over the complete approved prescription universe, using supply-side product lifecycle signals that
+over the complete approved prescription data, using supply-side product lifecycle signals that
 existing work leaves on the table, and validated temporally with explicit controls against the
-target leakage that makes this task look far easier than it is.
+target leakage.
 
 ## References
 

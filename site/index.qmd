@@ -5,82 +5,82 @@ subtitle: "Can federal supply-side data warn us before a drug runs short?"
 
 ## The Problem
 
-Drug shortages are a persistent feature of the US healthcare system. They affect everything from
+Drug shortages are a persistent problem in the US healthcare system. They affect everything from
 over-the-counter medications to the sterile injectables used in surgery, chemotherapy, and
-emergency care. When a shortage hits, hospitals substitute, ration, or delay treatment; pharmacies
-scramble to source alternatives; and patients face interrupted therapy, higher prices, or care
+emergency care. When a shortage hits, hospitals must substitute, ration, or delay treatment. Pharmacies
+scramble to source alternatives, and patients face interrupted treatment, higher prices, or care
 that is simply postponed.
 
-The operational problem is not only that shortages happen — it is that **warning time is
-unpredictable**. A shortage may be announced weeks or months after supply has already tightened,
+The operational problem is not only that shortages happen; it is that warning time is
+unpredictable. A shortage may be announced weeks or months after supply has already tightened,
 or a drug may quietly disappear with no announcement at all. Because the lead time is so
-variable, stockpiling is both expensive and poorly targeted. Vizient estimates that managing
-shortages costs US hospitals roughly **$900 million per year in labor expenses alone**
-[@vizient2019], before counting price increases or the clinical cost of unavailable medication.
+variable, preparatory stockpiling is both expensive and poorly targeted. Vizient estimates that managing
+shortages costs US hospitals roughly $900 million per year in labor expenses alone
+[@vizient2019], before counting price increases or the clinical cost of unavailable medication, or the less
+quantifiable effects of deferred treatment or patient suffering. 
 
-This project asks a practical question: **using only public federal data, can we tell in advance
-which drugs are heading for shortage?**
+Thus, this project seeks to answer the question of using only public federal data, can we tell in advance
+which drugs are heading for shortage?
 
-## Who This Affects
+## Who This Affects:
 
-| Stakeholder | Stake in the problem |
+| Stakeholder | Issue/stake |
 |---|---|
-| **Patients** | Interrupted or substituted therapy, delayed procedures, higher out-of-pocket cost |
-| **Hospitals & health systems** | Labor cost of mitigation, substitution protocols, rationing decisions |
-| **Pharmacies** | Sourcing, inventory risk, patient communication |
-| **Clinicians** | Forced therapeutic substitution, often with less-familiar alternatives |
-| **Group purchasing organizations** | Contract and inventory planning across many facilities |
-| **FDA and regulators** | Early detection, mitigation authority, supply-chain policy |
+| Patients | Interrupted or substituted therapy, delayed procedures, higher out-of-pocket cost |
+| Hospitals & health systems | Labor cost of mitigation, substitution protocols, rationing decisions |
+| Pharmacies | Sourcing, inventory risk, patient communication |
+| Clinicians | Forced therapeutic substitution, often with less-familiar alternatives |
+| Group purchasing organizations | Contract and inventory planning across many facilities |
+| FDA and regulators | Early detection, mitigation authority, supply-chain policy |
 
 The most direct beneficiaries of better warning are hospital pharmacy directors and purchasing
-groups, who currently make stockpiling decisions with little forward visibility.
+groups, who currently make stockpiling decisions with little forward visibility. Ultimately, those most affected are patients,
+whether through their health directly, or by increased cost of treatments passed on by organizations. 
 
-## What Is Already Done — and What Is Missing
+## Previous Work and Available Data
 
 FDA maintains a public drug shortage list, and the American Society of Health-System Pharmacists
 maintains a parallel set of shortage bulletins. FDA's own task force has analyzed root causes and
 attributed most shortages to economic conditions in low-margin generic markets rather than to any
-single manufacturing failure [@fda2019roots]. This infrastructure is fundamentally **reactive**:
+single manufacturing failure [@fda2019roots]. This infrastructure is fundamentally reactive:
 it documents shortages once they are detected, which is useful for response but not for
 anticipation.
 
-Two structural gaps motivate this project.
+There are some data/structural gaps that we seek to address with this project:
 
-**First, the historical record is actively destroyed.** FDA purges resolved shortages from its
-public file after roughly six months. As of September 2026 the live file retained only **7
-resolved records** out of 1,634. Counting shortage onsets from the live file yields just 3–17 per
-year, and only for shortages that never resolved — a severely length-biased sample. Any attempt to
-learn from that file alone is training on survivors.
+First, the historical record is actively destroyed. FDA purges resolved shortages from its
+public file after roughly six months. For example, as of September 2026 the live file retained only 7
+resolved records out of 1,634. Counting shortage onsets from the live file yields just 3–17 per
+year, and only for shortages that never resolved.
 
-**Second, supply-side withdrawal data is largely unused.** FDA's NSDE file retains product records
-after they are delisted, which makes it possible to observe manufacturers exiting a product
-*before* any shortage is declared. Existing public attempts at shortage prediction do not use it.
+Second, supply-side withdrawal data is largely unused. Sometimes manufacturers or distributers simply stop making a drug 
+or stop distributing a particular formulation. When this occurs, the product is delisted from the FDA's database.
+The FDA's NSDE file retains product records after they are delisted, which makes it possible to observe manufacturers exiting a product
+before any shortage is declared. Existing public attempts at shortage prediction do not use it. 
 
-### Recovering the History
+### Recovering Historical Records 
 
 We reconstructed the shortage record from 102 Internet Archive captures of FDA's CDER shortage
-file spanning 2019–2026. This recovers **10,967 shortage episodes across 1,416 drugs**, including
-**2,028 with resolution dates** — versus 7 in the live file.
+file spanning 2019–2026. This recovers 10,967 shortage episodes across 1,416 drugs, including
+2,028 with resolution dates (far more than the 7 available in the live file)
 
 ![Reconstructed drug-level shortage onsets per year, compared with what is visible in FDA's live shortage file. The live file retains only long-running, unresolved shortages, understating annual onsets by roughly an order of magnitude. Reconstructed from 102 Internet Archive captures of FDA's CDER shortage CSV. 2018 is left-censored (captures begin 2019-10-20) and 2026 is a partial year.](figures/shortage-onsets-by-year.png){#fig-onsets}
 
 @fig-onsets is the central motivation for this project's data strategy: the gap between the two
 series is the training data that a naive approach would silently discard.
 
-## Project Blueprint
+## Project Plan
 
-Over the semester the team plans to:
+Over the semester, we plan to:
 
-1. **Reconstruct shortage labels** from archived FDA files, recovering onset and resolution dates
+1. Reconstruct shortage labels from archived FDA files, recovering onset and resolution dates
    that the live file no longer carries.
-2. **Build an analysis panel** at the active ingredient &times; route of administration level — 2,897
-   approved prescription units — joined across product, approval, recall, and Medicare
+2. Build an analysis panel at the active ingredient/route of administration level, and join across product, approval, recall, and Medicare
    utilization data.
-3. **Test for leading indicators**: whether package-level product delistings rise measurably
+3. Test for leading indicators: whether package-level product delistings rise measurably
    before a shortage is declared, and with how much lead time.
-4. **Evaluate predictability** under strict temporal validation — training on earlier years and
-   testing on later ones — with a pre-registered list of banned leakage features.
-5. **Report honestly on limits**, including where the reconstructed record is incomplete and how
-   performance varies across periods with different dominant shortage causes.
+4. Evaluate predictability under strict temporal validation: training on earlier years and
+   testing on later ones, and predermine a list of features that would produce leakage.
+5. Report clearly on limits, including where the reconstructed record is incomplete and how
+   performance might vary across periods with different dominant shortage causes.
 
-The emphasis is on evidence about a real operational problem, not on comparing algorithms.

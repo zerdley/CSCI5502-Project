@@ -4,16 +4,16 @@ title: "Proposal Overview"
 
 ## Summary
 
-**Problem.** Drug shortages disrupt patient care and impose large costs on hospitals and
+**Problem:** Drug shortages disrupt patient care and impose large costs on hospitals and
 pharmacies. Warning time before a shortage is declared is highly variable, which makes
-preparation expensive and poorly targeted.
+preparation expensive and difficult.
 
-**Goal.** Determine whether shortage onset can be anticipated from public federal data, and
-identify which supply-side signals carry advance warning. The project produces a calibrated
-probability that a given drug enters shortage within a defined window, together with evidence
-about which product characteristics drive that risk.
+**Goal:** Determine whether shortage onset can be anticipated from public federal data, and if so,
+identify which supply-side signals carry the advance warning. The project will produce a calibrated
+probability that a given drug/route group enters shortage within a defined window, together with evidence
+about which data features provide the signal.
 
-**Unit of analysis.** Active ingredient &times; route of administration — 2,897 approved prescription
+**Unit of analysis.** Active ingredient per route of administration, for a total of 2,897 approved prescription
 units.
 
 **Validation.** Temporal only: train on earlier years, test on later ones.
@@ -36,42 +36,41 @@ key.
 
 ## Current Research Questions
 
-The four questions are stated in full on the [Research Questions](questions.qmd) page. In brief: whether
-manufacturers exit before shortages are declared (RQ1); which characteristics distinguish
-shortage-prone drugs (RQ2); how predictable onset is under temporal validation (RQ3); and whether
-that predictability survives changes in the dominant causes of shortage (RQ4).
+The four questions are stated in full on the [Research Questions](questions.qmd) page. 
 
-## Major Constraints
+## Constraints and Challenges 
 
-**The live shortage file is a snapshot, not a history.** FDA purges resolved shortages after
-approximately six months. Labels must be reconstructed from archived captures; this is done, but
-it introduces its own coverage limits (below).
+**The FDA live shortage data is only a snapshot.** FDA purges resolved shortages after
+approximately six months post-shortage ending. Labels must be reconstructed from archived captures; this can be done from 
+the Internet Archive, but
+it introduces its own coverage limits (discussed below).
 
-**Short shortages are under-represented.** The archived capture series has two gaps exceeding
+**Short shortages are under-represented.** The archived data has two gaps exceeding
 FDA's purge window, and the median lag between a record's posting date and the first capture
 containing it is 116 days. Episodes that open and close between captures are invisible. Both
 effects bias the recovered record toward longer shortages, and we report this rather than
-treating the panel as complete.
+treating the panel as complete. In short: because of the available archive periods, and the 
+6-month purge schedule, shorter shortages may fall through the cracks.
 
 **Target leakage is a documented, severe risk on this task.** Any feature derived from how long a
-record has been posted predicts the label almost perfectly while being useless in practice. The
-team fixes a banned-feature list before modeling and treats unexpectedly high performance as a
-leakage bug until proven otherwise.
+record has been posted predicts the label almost perfectly while being useless in practice. We need to
+identify a banned-feature list before modeling and treat unexpectedly high performance as a
+leakage indicator until proven otherwise.
 
-**The process is not stationary.** FDA's attribution of shortage causes inverts between reporting
-periods, so results are reported by period rather than pooled.
+**The shortage causes are not stationary over time.** The FDA's attribution of shortage causes changes across periods, 
+with some causes dominating during certain year ranges. Some of this could be driven by external environments (e.g. the COVID pandemic),
+legislative/regulatory changes that require different reporting, or simply 'drift' from manufacters, as the causes are simply reported by
+the manufacturers. Developing shortage-cause regimes thus may be a matter of temporal division, as well as cause-label grouping. 
 
-**Licensing.** openFDA and CDER data are public domain and freely redistributable. ASHP /
-University of Utah shortage bulletins are copyrighted for personal use only; they are not used or
-redistributed in this project.
+**Licensing.** openFDA and CDER data are public domain and freely redistributable.
 
 ## Changes Since Milestone 0
 
 The approved Milestone 0 proposal remains the basis of this project.
 
-**Related work was identified and the contribution sharpened.** Two public GitHub projects
+**Related/background work was identified and the contribution sharpened.** Two public GitHub projects
 attempt a similar reconstruction. Neither is peer-reviewed and neither covers the full approved
 prescription universe. The [Background](background.qmd) page states what they establish and where
-this project differs — principally the full ingredient &times; route universe rather than a WHO
+this project differs: principally the full ingredient/route universe rather than using a WHO
 Essential Medicines List subset, and the use of NSDE supply-side lifecycle data that neither
-project employs. This improves focus by making the contribution explicit rather than assumed.
+project employs. 
