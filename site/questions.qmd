@@ -10,6 +10,7 @@ prescription units in the data). This matters because published shortage counts 
 magnitude depending on whether they count molecules, package codes, or list entries.
 
 ---
+
 ## RQ1: How predictable is shortage onset?
 
 *Predictive.*
@@ -43,6 +44,7 @@ carry risk.
 **Evidence.** Group comparisons and effect sizes across the panel.
 
 ---
+
 ## RQ3: Do manufacturers exit before a shortage is declared?
 
 *Relationship / leading indicator.*
