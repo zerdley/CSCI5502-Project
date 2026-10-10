@@ -16,6 +16,8 @@ website:
         text: Background
       - href: proposal.qmd
         text: Proposal Overview
+      - href: data.qmd
+        text: Data
       - href: team.qmd
         text: Team
     right:

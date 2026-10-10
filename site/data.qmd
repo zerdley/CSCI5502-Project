@@ -1,0 +1,28 @@
+---
+title: "Data"
+---
+
+## Data Provenance and Acquisition
+
+All sources are US federal public-domain data available as bulk downloads without authentication.
+Total download is approximately 100 MB.
+
+| Dataset | Provider | Access | Role |
+|---|---|---|---|
+| Drug Shortages (current) | openFDA | `download.open.fda.gov/drug/shortages/` | Current shortage state, NDC keys |
+| Archived CDER shortage CSVs | Internet Archive | `web.archive.org` → `accessdata.fda.gov` | Historical labels: start and end dates |
+| NSDE (product lifecycle) | openFDA | `download.open.fda.gov/other/nsde/` | Supply-side panel; retains delisted products |
+| NDC Directory | openFDA | `download.open.fda.gov/drug/ndc/` | Product master, route/form features |
+| Drug Enforcement (recalls) | openFDA | `download.open.fda.gov/drug/enforcement/` | Recall history |
+| Orange Book | FDA | `fda.gov/media/76860/download` | Approval type, ANDA counts |
+| Medicare Part B / Part D Spending | CMS | `data.cms.gov` | Demand, price trend, manufacturer counts |
+
+**Licensing.** openFDA and CDER data are public domain (CC0) and may be freely redistributed.
+ASHP / University of Utah shortage bulletins are copyrighted for personal use only and are **not**
+used or redistributed in this project.
+
+### Acquisition
+
+Raw and intermediate data are not committed to the
+[repository](https://github.com/zerdley/CSCI5502-Project) (see `.gitignore`). Acquisition scripts
+and instructions will be added to `src/` as the pipeline is developed.
