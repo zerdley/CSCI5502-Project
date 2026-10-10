@@ -28,7 +28,7 @@ alongside ROC-AUC, with a predetermined list of banned leakage features; any fea
 how long a record has been posted encodes the answer and is excluded by construction.
 
 
----
+***
 
 ## RQ2: What distinguishes drugs that go into shortage?
 
@@ -61,7 +61,7 @@ as an actionable parameter for downstream facilities.
 12 months before a shortage onset against matched control windows, using the NSDE lifecycle file,
 which retains delisted products that the current NDC Directory drops.
 
----
+***
 
 ## RQ4: Does predictability hold as the causes of shortage change?
 

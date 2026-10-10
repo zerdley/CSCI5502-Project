@@ -12,7 +12,7 @@ I am a Data Science Master's student from Denver, Colorado. I came to the progra
 
 **Links:** [LinkedIn](https://www.linkedin.com/in/zach-erdley-93a091256)
 
----
+***
 
 ## Dylan Hudson
 
@@ -24,7 +24,7 @@ I'm a data scientist living in Boulder, CO. I currently lead the Threat Research
 
 **Links:** [https://dyls.info](https://dyls.info)
 
----
+***
 
 ## Mar Lonsway
 
