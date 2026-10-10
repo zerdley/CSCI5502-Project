@@ -54,8 +54,22 @@ used or redistributed in this project.
 
 ### Data Acquisition
 
-Raw and intermediate data are not committed to this repository (see `.gitignore`). Acquisition
-scripts and instructions will be added to `src/` as the pipeline is developed.
+Raw and intermediate data are not committed to this repository (see `.gitignore`). To rebuild
+them, run from the repository root:
+
+```bash
+uv run python src/acquisition/download_bulk_files.py         # ~100 MB of bulk files -> data/raw/
+uv run python src/acquisition/fetch_archived_shortages.py    # ~120 captures, ~12 min -> data/raw/cder_archive/
+uv run python src/acquisition/stitch_archived_shortages.py   # -> data/interim/shortage_episodes.csv
+```
+
+The archive fetch is throttled to one request every 6 seconds because the Internet Archive rate
+limits aggressively. It skips captures already on disk, so it is safe to re-run after an
+interruption.
+
+The stitch step turns point-in-time snapshots into one row per shortage episode. FDA purges
+resolved shortages from its live list after about six months, so resolution dates survive only in
+archived captures. Short episodes that open and close between captures are not observed.
 
 
 ## Repository Structure
