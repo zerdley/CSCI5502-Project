@@ -61,6 +61,7 @@ them, run from the repository root:
 uv run python src/acquisition/download_bulk_files.py         # ~100 MB of bulk files -> data/raw/
 uv run python src/acquisition/fetch_archived_shortages.py    # ~120 captures, ~12 min -> data/raw/cder_archive/
 uv run python src/acquisition/stitch_archived_shortages.py   # -> data/interim/shortage_episodes.csv
+uv run python src/cleaning/clean_shortage_episodes.py        # -> data/interim/*.parquet
 ```
 
 The archive fetch is throttled to one request every 6 seconds because the Internet Archive rate
