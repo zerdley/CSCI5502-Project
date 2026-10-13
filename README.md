@@ -81,8 +81,9 @@ archived captures. Short episodes that open and close between captures are not o
 
 ```
 .
+├── site/           # Website (Quarto); published notebooks live here as pages
 ├── src/            # Analysis and data-acquisition code
-├── notebooks/      # Exploratory notebooks
+├── notebooks/      # Working notebooks, not published
 ├── data/           # Local only; not committed
 │   ├── raw/        # Bulk downloads as retrieved
 │   ├── interim/    # Intermediate artifacts
@@ -90,6 +91,11 @@ archived captures. Short episodes that open and close between captures are not o
 ├── report/         # Milestone writeups and submitted documents
 └── milestones/     # Instructor-provided milestone specifications
 ```
+
+Published notebooks (e.g. `site/data-pipeline.ipynb`) are rendered from their saved outputs, since
+the website build has no data. After changing one, re-run it from `site/` with the data in place
+(`uv run jupyter nbconvert --to notebook --execute --inplace <notebook>`) and commit it with its
+outputs.
 
 ## Development Setup
 

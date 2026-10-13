@@ -8,11 +8,12 @@ gap between archive captures would look like the unit leaving and re-entering sh
 
 Onset date. An episode's start is FDA's Initial Posting Date when that date falls between the
 last archive capture that did not list the episode and the first that did, since the archive then
-confirms it. Otherwise it is the first capture listing the episode (first_seen). Since about 2023,
-FDA files newly affected packages under a drug's original posting date (a median of three years
-earlier for rows first seen in 2025), so a posting date outside that window is stale. The check
-also gives precise dates to shortages that began during the archive's long capture gaps, which
-first_seen alone would push to the end of the gap.
+confirms it. Otherwise it is the first capture listing the episode (first_seen). From 2023 on,
+most newly listed shortage episodes carry a posting date more than a year old: either FDA rewrote
+an existing row's description (which the stitch step sees as a new episode but which keeps its
+date), or FDA listed a new package under a drug's existing entry and date. The check also gives
+precise dates to shortages that began during the archive's long capture gaps, which first_seen
+alone would push to the end of the gap.
 
 Discontinuations are not shortages. Episodes only ever listed as "To Be Discontinued" record a
 manufacturer exiting, which is a predictor of interest (research question 3), not the outcome.
@@ -95,8 +96,9 @@ def shortage_episode_intervals(episodes: pd.DataFrame, episode_units: pd.DataFra
     })
 
 
-def merge_into_spells(intervals: pd.DataFrame, final_capture: pd.Timestamp) -> pd.DataFrame:
-    washout = pd.Timedelta(days=WASHOUT_DAYS)
+def merge_into_spells(intervals: pd.DataFrame, final_capture: pd.Timestamp,
+                      washout_days: int = WASHOUT_DAYS) -> pd.DataFrame:
+    washout = pd.Timedelta(days=washout_days)
     spells = []
     for unit_id, unit_intervals in intervals.sort_values("start").groupby("unit_id"):
         spell = None
