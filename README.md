@@ -31,7 +31,7 @@ is formally declared.
 1. How predictable is shortage onset?
 2. What distinguishes drugs that go into shortage?
 3. Do manufacturers exit before a shortage is declared?
-4. Does predictability hold as the causes of shortage change?
+4. Does predictability hold across types of drugs (sterile injectables vs oral drugs)?
 
 ## Data Sources
 
@@ -82,7 +82,12 @@ archived captures. Short episodes that open and close between captures are not o
 ```
 .
 ├── site/           # Website (Quarto); published notebooks live here as pages
-├── src/            # Analysis and data-acquisition code
+│   ├── data-pipeline.ipynb   # Pipeline and quality checks page
+│   └── eda.ipynb             # Exploration page
+├── src/
+│   ├── acquisition/  # Download bulk files, fetch archived FDA shortage lists, stitch episodes
+│   ├── cleaning/     # Clean episodes, define drug units, link episodes and recalls to units
+│   └── panel/        # Build the drug x year panel, its outcome, and its features
 ├── notebooks/      # Working notebooks, not published
 ├── data/           # Local only; not committed
 │   ├── raw/        # Bulk downloads as retrieved
@@ -103,16 +108,20 @@ This project uses [uv](https://docs.astral.sh/uv/) for Python environment manage
 the pinned Python version automatically; no separate Python install is needed.
 
 ```bash
-uv sync                   
-uv run python <script>
+uv sync                                # install the pinned Python and dependencies
+uv run python <script>                 # run any script in the project environment
+quarto preview site                    # live preview of the website
 ```
+
+The website uses [Quarto](https://quarto.org). The full data pipeline and its run order are under
+[Data Acquisition](#data-acquisition) above.
 
 ## Milestones/Roadmap
 
 | Milestone | Focus | Status |
 |---|---|---|
 | **M0** | Proposal: problem, data sources, feasibility and ethics | ✅ Approved |
-| **M1** | Project framing, research questions, team, repository, website | 🚧 In progress |
-| **M2** | _TBD_ | — |
+| **M1** | Project framing, research questions, team, repository, website | ✅ Complete |
+| **M2** | Data acquisition, preparation and exploration | 🚧 In progress |
 | **M3** | _TBD_ | — |
 | **M4** | _TBD_ | — |
