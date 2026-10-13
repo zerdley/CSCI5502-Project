@@ -62,6 +62,8 @@ uv run python src/acquisition/download_bulk_files.py         # ~100 MB of bulk f
 uv run python src/acquisition/fetch_archived_shortages.py    # ~120 captures, ~12 min -> data/raw/cder_archive/
 uv run python src/acquisition/stitch_archived_shortages.py   # -> data/interim/shortage_episodes.csv
 uv run python src/cleaning/clean_shortage_episodes.py        # -> data/interim/*.parquet
+uv run python src/cleaning/map_episodes_to_units.py          # -> data/interim/units.parquet, episode_units.parquet
+uv run python src/panel/build_unit_year_panel.py             # -> data/processed/unit_year_panel.parquet
 ```
 
 The archive fetch is throttled to one request every 6 seconds because the Internet Archive rate
