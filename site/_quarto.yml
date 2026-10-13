@@ -22,6 +22,8 @@ website:
             text: Sources
           - href: data-pipeline.ipynb
             text: Pipeline and Quality Checks
+          - href: eda.ipynb
+            text: Exploration
       - href: team.qmd
         text: Team
     right:

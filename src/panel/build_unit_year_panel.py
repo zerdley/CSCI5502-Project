@@ -13,31 +13,37 @@ most newly listed shortage episodes carry a posting date more than a year old: e
 an existing row's description (which the stitch step sees as a new episode but which keeps its
 date), or FDA listed a new package under a drug's existing entry and date. The check also gives
 precise dates to shortages that began during the archive's long capture gaps, which first_seen
-alone would push to the end of the gap.
+alone would push to the end of the gap. An episode first captured already resolved began before
+that capture, so it starts at its posting date, and its start is unknown if that posting date
+precedes the archive.
 
 Discontinuations are not shortages. Episodes only ever listed as "To Be Discontinued" record a
 manufacturer exiting, which is a predictor of interest (research question 3), not the outcome.
 
-Panel rows. One row per unit per year in which at least one of its packages was on the market,
-according to NSDE marketing dates. A unit-year is at risk if the unit was not already in a
-shortage spell on January 1; onset = 1 if a spell started that year.
+Panel rows. One row per unit per year t if at least one of its packages was on the market at the
+end of year t-1, according to NSDE (nsde_packages.py), so membership uses nothing from year t.
+A unit-year is at risk if none of the unit's shortage episodes was active on January 1. That uses
+episodes, not spells, because a spell can be bridged across January 1 by an episode that only
+appears later in the year, which a forecaster on January 1 couldn't know. onset = 1 if a spell
+started that year.
 
 Label years are 2020-2025. The archive starts 2019-10-20, so spells already running at the first
 capture have unknown start dates, and 2026 is incomplete.
 
 Input:  data/interim/shortage_episodes_clean.parquet, data/interim/episode_units.parquet,
-        data/interim/application_units.parquet, data/raw/other-nsde-*.json,
+        data/interim/application_units.parquet, data/raw/other-nsde-*.json (via nsde_packages),
         data/raw/cder_archive/*.csv (file names only, for the capture dates)
 Output: data/interim/shortage_spells.parquet  one row per (unit, shortage spell)
-        data/processed/unit_year_panel.parquet  one row per (unit, year on the market)
+        data/processed/unit_year_panel.parquet  one row per (unit, year it entered on the market)
 
 Usage: uv run python src/panel/build_unit_year_panel.py
 """
 
-import json
 from pathlib import Path
 
 import pandas as pd
+
+from nsde_packages import is_active_on, load_unit_packages
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
@@ -47,7 +53,6 @@ PROCESSED_DATA_DIR = DATA_DIR / "processed"
 EPISODES_PATH = INTERIM_DATA_DIR / "shortage_episodes_clean.parquet"
 EPISODE_UNITS_PATH = INTERIM_DATA_DIR / "episode_units.parquet"
 APPLICATION_UNITS_PATH = INTERIM_DATA_DIR / "application_units.parquet"
-NSDE_PATHS = sorted(RAW_DATA_DIR.glob("other-nsde-*-of-*.json"))
 ARCHIVE_DIR = RAW_DATA_DIR / "cder_archive"
 SPELLS_PATH = INTERIM_DATA_DIR / "shortage_spells.parquet"
 PANEL_PATH = PROCESSED_DATA_DIR / "unit_year_panel.parquet"
@@ -84,15 +89,23 @@ def shortage_episode_intervals(episodes: pd.DataFrame, episode_units: pd.DataFra
     intervals = episode_units.join(episodes.loc[is_shortage], on="episode_id", how="inner")
     start, start_source = estimated_start(intervals["first_seen"], intervals["posted"],
                                           capture_dates)
+    start_unknown = intervals["first_seen"] == capture_dates[0]
+
+    resolved_before_listed = intervals["resolved_date"] < intervals["first_seen"]
+    start = start.where(~resolved_before_listed, intervals["posted"])
+    start_source = start_source.where(~resolved_before_listed, "posted")
+    start_unknown |= resolved_before_listed & ~(intervals["posted"] >= capture_dates[0])
+
     # An episode with no resolution date was in shortage at least until the last capture listing
-    # it. Some are first captured already resolved, so the end can't precede the start.
+    # it.
     end = intervals["resolved_date"].fillna(intervals["last_seen"])
+    start = start.fillna(intervals["first_seen"])
     return pd.DataFrame({
         "unit_id": intervals["unit_id"],
         "start": start,
         "end": end.where(end > start, start),
         "start_source": start_source,
-        "start_unknown": intervals["first_seen"] == capture_dates[0],
+        "start_unknown": start_unknown,
     })
 
 
@@ -121,48 +134,37 @@ def merge_into_spells(intervals: pd.DataFrame, final_capture: pd.Timestamp,
 # ---- Market presence ----------------------------------------------------------------------------
 
 def unit_market_years(application_units: pd.DataFrame) -> pd.DataFrame:
-    """Every (unit, year) in LABEL_YEARS in which NSDE shows one of the unit's packages marketed."""
-    rows = []
-    for path in NSDE_PATHS:
-        with open(path) as file:
-            rows.extend(json.load(file)["results"])
-    packages = pd.DataFrame(rows)[["application_number_or_citation", "marketing_start_date",
-                                   "marketing_end_date"]]
-    packages = packages.rename(columns={"application_number_or_citation": "application"})
-    packages = packages.merge(application_units, on="application")
-
-    start_year = pd.to_datetime(packages["marketing_start_date"], format="%Y%m%d").dt.year
-    # A missing end date means the package is still marketed.
-    end_year = (pd.to_datetime(packages["marketing_end_date"], format="%Y%m%d").dt.year
-                .fillna(max(LABEL_YEARS)))
-
+    """Every (unit, year t) in LABEL_YEARS with a package on the market at the end of t-1."""
+    packages = load_unit_packages(application_units)
     market_years = [
-        (unit_id, year)
-        for unit_id, first, last in zip(packages["unit_id"], start_year, end_year)
+        pd.DataFrame({"unit_id": packages.loc[is_active_on(packages, end_of_previous_year),
+                                              "unit_id"].unique(), "year": year})
         for year in LABEL_YEARS
-        if first <= year <= last
+        for end_of_previous_year in [pd.Timestamp(year=year - 1, month=12, day=31)]
     ]
-    return (pd.DataFrame(market_years, columns=["unit_id", "year"])
-            .drop_duplicates().sort_values(["unit_id", "year"]).reset_index(drop=True))
+    return pd.concat(market_years).sort_values(["unit_id", "year"]).reset_index(drop=True)
 
 
 # ---- Panel --------------------------------------------------------------------------------------
 
-def build_panel(market_years: pd.DataFrame, spells: pd.DataFrame) -> pd.DataFrame:
+def build_panel(market_years: pd.DataFrame, intervals: pd.DataFrame,
+                spells: pd.DataFrame) -> pd.DataFrame:
     panel = market_years.copy()
     january_first = pd.to_datetime(panel["year"].astype(str) + "-01-01")
 
+    intervals_by_unit = dict(tuple(intervals.groupby("unit_id")))
     spells_by_unit = dict(tuple(spells.groupby("unit_id")))
     in_shortage_on_january_1 = []
     onset = []
     for unit_id, jan_1, year in zip(panel["unit_id"], january_first, panel["year"]):
+        unit_intervals = intervals_by_unit.get(unit_id)
         unit_spells = spells_by_unit.get(unit_id)
         if unit_spells is None:
             in_shortage_on_january_1.append(False)
             onset.append(0)
             continue
         in_shortage_on_january_1.append(
-            ((unit_spells["start"] < jan_1) & (unit_spells["end"] >= jan_1)).any())
+            ((unit_intervals["start"] < jan_1) & (unit_intervals["end"] >= jan_1)).any())
         starts_this_year = (unit_spells["start"].dt.year == year) & ~unit_spells["start_unknown"]
         onset.append(int(starts_this_year.any()))
 
@@ -187,8 +189,8 @@ def print_summary(spells: pd.DataFrame, panel: pd.DataFrame) -> None:
         panel, left_on=["unit_id", onsets_in_label_years["start"].dt.year],
         right_on=["unit_id", "year"], how="left", indicator=True)
     off_market = (onset_units_in_panel["_merge"] == "left_only").sum()
-    print(f"  onsets in {min(LABEL_YEARS)}-{max(LABEL_YEARS)} for a unit NSDE shows off the "
-          f"market that year (dropped): {off_market}")
+    print(f"  onsets in {min(LABEL_YEARS)}-{max(LABEL_YEARS)} for a unit with no package on the "
+          f"market at the end of the previous year (dropped): {off_market}")
 
     by_year = panel.groupby("year").agg(
         units_on_market=("unit_id", "size"),
@@ -200,7 +202,8 @@ def print_summary(spells: pd.DataFrame, panel: pd.DataFrame) -> None:
     print("\npanel by year:")
     print(by_year.to_string())
     not_at_risk_onsets = panel.loc[~panel["at_risk"], "onset"].sum()
-    # The washout makes this impossible, so anything nonzero is a bug.
+    # An episode active on January 1 belongs to a spell already running then, and the washout
+    # stops a new spell from starting within the year, so anything nonzero is a bug.
     print(f"\nonsets in unit-years not at risk (should be 0): {not_at_risk_onsets}")
 
 
@@ -212,7 +215,7 @@ def main():
     capture_dates = archive_capture_dates()
     intervals = shortage_episode_intervals(episodes, episode_units, capture_dates)
     spells = merge_into_spells(intervals, capture_dates[-1])
-    panel = build_panel(unit_market_years(application_units), spells)
+    panel = build_panel(unit_market_years(application_units), intervals, spells)
 
     PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
     spells.to_parquet(SPELLS_PATH, index=False)

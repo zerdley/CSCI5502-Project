@@ -10,6 +10,11 @@ NSDE is used for the first link because it keeps every package ever marketed, in
 ones. Biologics (not in the Orange Book) and unapproved drugs have no unit and are reported, not
 mapped.
 
+Known limit: units are defined by the Orange Book's ingredient text, which sometimes spells the
+same product two ways (e.g. two multivitamin infusions whose vitamin lists are written
+differently). Such a product becomes two units, so one shortage can count as two onsets. This
+affects a handful of products and is not corrected here.
+
 Input:  data/interim/shortage_episodes_clean.parquet, data/interim/shortage_episode_ndcs.parquet
         data/raw/products.txt (Orange Book), data/raw/other-nsde-*.json
 Output: data/interim/units.parquet              one row per unit

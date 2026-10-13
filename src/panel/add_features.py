@@ -5,7 +5,7 @@ or over the calendar year t-1. Nothing from year t itself is used, so a model se
 knowable before the year it predicts.
 
 Features
-    Supply structure (NSDE marketing dates)
+    Supply structure (NSDE marketing and inactivation dates, via nsde_packages.py)
         active_packages               packages on the market at the end of t-1
         active_applications           distinct FDA approvals with an active package
         active_generic_applications   of those, generic approvals (ANDAs)
@@ -16,7 +16,7 @@ Features
         package_exits_prior_year            packages whose marketing ended during t-1
         application_exits_prior_year        approvals with an active package at the end of t-2
                                             and none at the end of t-1
-        discontinuation_notices_prior_year  FDA "To Be Discontinued" episodes first listed in t-1
+        discontinuation_notices_prior_year  episodes first listed as "To Be Discontinued" in t-1
     Product and market (Orange Book)
         route_group                   injectable, oral, ... (categorical)
         years_since_first_approval    from the unit's earliest approval to the end of t-1
@@ -29,7 +29,11 @@ Features
 
 Known limits. Shortage history and discontinuation notices come from the archive, which starts
 2019-10-20, so for 2020 rows they cover only late 2019. Packages under an approval that covers
-several units count toward each of them.
+several units count toward each of them. Exit timing is approximate: most exits come from NSDE
+inactivation dates, which bunch on a few dates a year (mostly late January, consistent with FDA
+inactivating listings not renewed the year before), so many exits that happened in one year are
+likely recorded early the next. package_exits_prior_year and application_exits_prior_year
+inherit that lag; whether to count inactivation-based exits is left to be tested when modeling.
 
 Input:  data/processed/unit_year_panel.parquet, data/interim/{units, application_units,
         shortage_spells, shortage_episodes_clean, episode_units, recall_units}.parquet,
@@ -39,10 +43,11 @@ Output: data/processed/unit_year_features.parquet  the panel plus the feature co
 Usage: uv run python src/panel/add_features.py
 """
 
-import json
 from pathlib import Path
 
 import pandas as pd
+
+from nsde_packages import is_active_on, load_unit_packages
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
@@ -51,7 +56,6 @@ PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
 PANEL_PATH = PROCESSED_DATA_DIR / "unit_year_panel.parquet"
 FEATURES_PATH = PROCESSED_DATA_DIR / "unit_year_features.parquet"
-NSDE_PATHS = sorted(RAW_DATA_DIR.glob("other-nsde-*-of-*.json"))
 ORANGE_BOOK_PATH = RAW_DATA_DIR / "products.txt"
 
 # The Orange Book gives approvals before 1982 only as "Approved Prior to Jan 1, 1982", so ages
@@ -64,23 +68,6 @@ def end_of_year(year: int) -> pd.Timestamp:
 
 
 # ---- Sources ------------------------------------------------------------------------------------
-
-def load_unit_packages(application_units: pd.DataFrame) -> pd.DataFrame:
-    """Every NSDE package linked to a unit, with its marketing start and end dates."""
-    rows = []
-    for path in NSDE_PATHS:
-        with open(path) as file:
-            rows.extend(json.load(file)["results"])
-    packages = pd.DataFrame(rows).dropna(subset=["package_ndc11"]).drop_duplicates("package_ndc11")
-    packages = pd.DataFrame({
-        "ndc11": packages["package_ndc11"],
-        "application": packages["application_number_or_citation"],
-        "start": pd.to_datetime(packages["marketing_start_date"], format="%Y%m%d", errors="coerce"),
-        "end": pd.to_datetime(packages["marketing_end_date"], format="%Y%m%d", errors="coerce"),
-    })
-    packages["labeler"] = packages["ndc11"].str[:5]
-    return packages.merge(application_units, on="application")
-
 
 def load_unit_approvals(application_units: pd.DataFrame) -> pd.DataFrame:
     """Every Orange Book approval linked to a unit, with its applicant and approval date."""
@@ -96,11 +83,6 @@ def load_unit_approvals(application_units: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---- Feature groups -----------------------------------------------------------------------------
-
-def is_active_on(packages: pd.DataFrame, date: pd.Timestamp) -> pd.Series:
-    # A missing end date means the package is still marketed.
-    return (packages["start"] <= date) & (packages["end"].isna() | (packages["end"] >= date))
-
 
 def supply_and_exit_features(packages: pd.DataFrame, years: range) -> pd.DataFrame:
     rows = []
@@ -137,12 +119,13 @@ def supply_and_exit_features(packages: pd.DataFrame, years: range) -> pd.DataFra
 
 def discontinuation_notice_features(episodes: pd.DataFrame, episode_units: pd.DataFrame,
                                     years: range) -> pd.DataFrame:
-    is_notice = episodes["statuses"].str.contains("To Be Discontinued")
-    # Notices already listed at the first capture have an unknown listing date.
-    listed_after_first_capture = episodes["first_seen"] > episodes["first_seen"].min()
-    notices = episode_units.join(episodes.loc[is_notice & listed_after_first_capture, "first_seen"],
-                                 on="episode_id", how="inner")
-    notices["year"] = notices["first_seen"].dt.year + 1
+    # A notice is dated by the first capture listing the episode as To Be Discontinued, which can
+    # be later than the episode's first listing. Notices already listed at the first capture have
+    # an unknown listing date.
+    listed = episodes["first_listed_discontinued"]
+    is_dated_notice = listed.notna() & (listed > episodes["first_seen"].min())
+    notices = episode_units.join(listed[is_dated_notice], on="episode_id", how="inner")
+    notices["year"] = notices["first_listed_discontinued"].dt.year + 1
     counts = (notices[notices["year"].isin(years)]
               .groupby(["unit_id", "year"])["episode_id"].nunique()
               .rename("discontinuation_notices_prior_year"))
