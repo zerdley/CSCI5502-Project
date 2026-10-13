@@ -2,12 +2,19 @@
 title: "Research Questions"
 ---
 
-These four questions support the project goal: understanding whether US drug
-shortages can be anticipated from public federal data, and if so, what supply-side signals precede them.
+These four questions support the project goal: understanding whether US drug shortages can be
+anticipated from public federal data, and if so, what supply-side signals precede them.
 
-The unit of analysis throughout is active ingredient per route of administration (2,897 total approved
-prescription units in the data). This matters because published shortage counts differ by an order of
-magnitude depending on whether they count molecules, package codes, or list entries.
+The unit of analysis throughout is a drug: one active ingredient given by one route of
+administration, such as *cisplatin, injectable*. The Orange Book defines 3,182 such approved
+prescription drugs, of which about 2,000 are on the market in a given year. This matters because
+published shortage counts differ by an order of magnitude depending on whether they count
+molecules, package codes, or list entries.
+
+The outcome is a **shortage onset**: a drug going into a new shortage in a given year, after at
+least a year without one. Our reconstruction from archived FDA files finds 161 onsets from 2020
+to 2025, matching FDA's own counts of new drug shortages for the years it reports (see
+[Pipeline and Quality Checks](data-pipeline.ipynb)).
 
 ---
 
@@ -15,33 +22,39 @@ magnitude depending on whether they count molecules, package codes, or list entr
 
 *Predictive.*
 
-Using only information available at time *t*, how well can ingredient per route units be ranked by
-probability of entering shortage within the next 6 and 12 months?
+Using only information available at the end of year *t*−1, how well can drugs be ranked by their
+risk of a new shortage during year *t*?
 
-**Why it matters.** This is an operational question that would allow facilities to prepare for shortages, and possibly avoid negative consequences. 
-A ranked watchlist is useful to a hospital
-pharmacy even if it not perfect, as long as its performance is honestly characterized.
+**Why it matters.** This is an operational question that would let facilities prepare for
+shortages, and possibly avoid their worst consequences. A ranked watchlist is useful to a
+hospital pharmacy even if it is not perfect, as long as its performance is honestly
+characterized.
 
-**Evidence.** Temporal validation: train through year *t*, test on *t+1 (never random
-k-fold). Performance reported as PR-AUC against the base rate
-alongside ROC-AUC, with a predetermined list of banned leakage features; any feature derived from
-how long a record has been posted encodes the answer and is excluded by construction.
+**Evidence.** Temporal validation: train through year *t*, test on *t*+1, never random k-fold.
+Onsets are rare (about 2% of at-risk drugs a year through 2023, and far fewer after), so test
+years are 2021 to 2023, scored by precision among the highest-ranked drugs and PR-AUC against the
+base rate, alongside ROC-AUC. Every model is compared with a simple baseline that flags drugs
+with a prior shortage. Features are fixed in advance and exclude anything derived from how long a
+record has been posted, or from FDA's stated reason for a shortage, both of which reveal the
+answer.
 
-
-***
+---
 
 ## RQ2: What distinguishes drugs that go into shortage?
 
 *Comparative / explanatory.*
 
-Which product characteristics, e.g. route and dosage form, generic competition, labeler and applicant
-counts, Medicare spending and claim volume, and recall history, distinguish ingredient/route
-units that enter shortage from those that do not?
+Which characteristics of a drug and its market, such as route of administration, time since first
+approval, number of manufacturers and approvals, manufacturer exits, recall history, and prior
+shortages, distinguish drugs that enter shortage from those that do not?
 
-**Why it matters:** Beyond prediction of the actual shortages, purchasers and regulators need to know which features
-carry risk.
+**Why it matters.** Beyond predicting individual shortages, purchasers and regulators need to
+know which characteristics carry risk.
 
-**Evidence.** Group comparisons and effect sizes across the panel.
+**Evidence.** Group comparisons with confidence intervals, then the same characteristics in a
+model that controls for one another. Exploration already shows injectables going short at about
+four times the rate of oral drugs, risk rising with a drug's age, and drugs with a single
+manufacturer going short *less* often than those with several (see [Exploration](eda.ipynb)).
 
 ---
 
@@ -49,30 +62,57 @@ carry risk.
 
 *Relationship / leading indicator.*
 
-Do package-level NDC delistings increase in the months preceding a declared shortage, and what is
-the typical lead time?
+Do drugs lose US-marketed packages or FDA approvals in the year before a shortage onset, compared
+with similar drugs over the same period?
 
 **Why it matters.** This is the project's central mechanism question. A declared shortage is a
-lagging indicator; product delisting is recorded independently and may move earlier. If exits
-precede declarations with usable lead time, delisting may be predicted or identified independently
-as an actionable parameter for downstream facilities. 
+lagging indicator; a manufacturer's exit is recorded independently and may come earlier. If
+exits precede shortages, they could serve as an early warning that facilities can act on.
 
-**Evidence.** An event study comparing the change in count of active NDCs per unit over the
-12 months before a shortage onset against matched control windows, using the NSDE lifecycle file,
-which retains delisted products that the current NDC Directory drops.
+**Evidence.** An event study using the NSDE product lifecycle file, which retains packages after
+they leave the market: each drug's packages and approvals around its shortage onset, compared
+with drugs in the same route group that were not in shortage over the same months. Exploration
+shows the design has to work at a yearly or quarterly scale, because many exit dates in NSDE are
+administrative (they cluster on a few dates a year), and has to use counts rather than
+percentages for drugs with only a few packages. Failures at foreign ingredient or manufacturing
+plants are invisible in US package data, which limits what this question can detect.
 
-***
+---
 
-## RQ4: Does predictability hold as the causes of shortage change?
+## RQ4: Does predictability hold across types of drugs?
 
-*Robustness / explanatory.*
+*Robustness.*
 
-Does predictive performance vary across shortage-cause regimes, i.e. periods dominated by
-manufacturing and quality problems versus periods dominated by demand increases?
+Does predictive performance hold for both sterile injectables and oral drugs, two groups whose
+shortages tend to have different causes and supply chains?
 
-**Why it matters.** FDA's own cause attribution inverts across reporting periods. A model that only works in one regime is a
-different, and weaker, tool than one that successfully generalizes across cause regimes. 
+**Why it matters.** Sterile injectables account for most onsets and are hard to manufacture; oral
+drugs are more numerous and cheaper to make. A model that only works for one group is a
+different, and weaker, tool than one that generalizes across both.
 
-**Evidence.** Performance reported by period rather than pooled, with the dominant reason code
-distribution reported alongside it to allow segementation by FDA-listed cause and model performance assessment
-at a more granular level.  
+**Evidence.** Performance reported separately for injectable and oral drugs (92 and 52 of the
+161 onsets), using the same temporal validation as RQ1, and compared with a model trained on one
+group and tested on the other.
+
+---
+
+## What changed since Milestone 1, and why
+
+Exploring the data changed what it can support, so three questions were revised and one was
+replaced.
+
+- **RQ1** now uses a single 12-month horizon instead of 6 and 12 months. The analysis dataset has
+  one row per drug per year, and with about 160 onsets in total, a 6-month horizon would leave too
+  few per test period. The evaluation now names the base rate and baseline it is judged against.
+- **RQ2** no longer lists Medicare spending and claims. Part D data links to drugs only by name,
+  and the Part B link covers only current package codes, so those features are deferred to the
+  modeling milestone if they can be joined reliably.
+- **RQ3** is narrowed from month-level timing of exits to the year before onset, with a
+  comparison group, because NSDE's exit dates are often administrative.
+- **RQ4 is replaced.** It asked whether predictability holds across periods dominated by
+  different causes, quality problems versus demand increases. In our data, demand increase is the
+  most cited specific cause in every year from 2020 to 2026, and the years FDA described as
+  dominated by quality problems, 2013 to 2017 [@fda2019roots], come before the archived shortage
+  files begin in late 2019. FDA's stated causes are also missing
+  for many shortages. The replacement keeps the question's purpose, testing whether predictability
+  holds across different kinds of shortages, in a form the data can answer.
