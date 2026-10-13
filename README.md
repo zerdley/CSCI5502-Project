@@ -63,7 +63,9 @@ uv run python src/acquisition/fetch_archived_shortages.py    # ~120 captures, ~1
 uv run python src/acquisition/stitch_archived_shortages.py   # -> data/interim/shortage_episodes.csv
 uv run python src/cleaning/clean_shortage_episodes.py        # -> data/interim/*.parquet
 uv run python src/cleaning/map_episodes_to_units.py          # -> data/interim/units.parquet, episode_units.parquet
+uv run python src/cleaning/map_recalls_to_units.py           # -> data/interim/recall_units.parquet
 uv run python src/panel/build_unit_year_panel.py             # -> data/processed/unit_year_panel.parquet
+uv run python src/panel/add_features.py                      # -> data/processed/unit_year_features.parquet
 ```
 
 The archive fetch is throttled to one request every 6 seconds because the Internet Archive rate
