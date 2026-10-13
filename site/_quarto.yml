@@ -16,8 +16,14 @@ website:
         text: Background
       - href: proposal.qmd
         text: Proposal Overview
-      - href: data.qmd
-        text: Data
+      - text: Data
+        menu:
+          - href: data.qmd
+            text: Sources
+          - href: data-pipeline.ipynb
+            text: Pipeline and Quality Checks
+          - href: eda.ipynb
+            text: Exploration
       - href: team.qmd
         text: Team
     right:

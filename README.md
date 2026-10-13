@@ -62,6 +62,10 @@ uv run python src/acquisition/download_bulk_files.py         # ~100 MB of bulk f
 uv run python src/acquisition/fetch_archived_shortages.py    # ~120 captures, ~12 min -> data/raw/cder_archive/
 uv run python src/acquisition/stitch_archived_shortages.py   # -> data/interim/shortage_episodes.csv
 uv run python src/cleaning/clean_shortage_episodes.py        # -> data/interim/*.parquet
+uv run python src/cleaning/map_episodes_to_units.py          # -> data/interim/units.parquet, episode_units.parquet
+uv run python src/cleaning/map_recalls_to_units.py           # -> data/interim/recall_units.parquet
+uv run python src/panel/build_unit_year_panel.py             # -> data/processed/unit_year_panel.parquet
+uv run python src/panel/add_features.py                      # -> data/processed/unit_year_features.parquet
 ```
 
 The archive fetch is throttled to one request every 6 seconds because the Internet Archive rate
@@ -77,8 +81,9 @@ archived captures. Short episodes that open and close between captures are not o
 
 ```
 .
+├── site/           # Website (Quarto); published notebooks live here as pages
 ├── src/            # Analysis and data-acquisition code
-├── notebooks/      # Exploratory notebooks
+├── notebooks/      # Working notebooks, not published
 ├── data/           # Local only; not committed
 │   ├── raw/        # Bulk downloads as retrieved
 │   ├── interim/    # Intermediate artifacts
@@ -86,6 +91,11 @@ archived captures. Short episodes that open and close between captures are not o
 ├── report/         # Milestone writeups and submitted documents
 └── milestones/     # Instructor-provided milestone specifications
 ```
+
+Published notebooks (e.g. `site/data-pipeline.ipynb`) are rendered from their saved outputs, since
+the website build has no data. After changing one, re-run it from `site/` with the data in place
+(`uv run jupyter nbconvert --to notebook --execute --inplace <notebook>`) and commit it with its
+outputs.
 
 ## Development Setup
 
