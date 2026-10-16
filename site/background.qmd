@@ -21,7 +21,8 @@ The Government Accountability Office (GAO) found that shortages
 concentrate in sterile injectables and older generic drugs, and are strongly associated with
 identifiable market conditions rather than distributed evenly across the drug supply
 [@gao2016factors]. This directly motivates RQ2: the attributes GAO identifies, dosage form,
-generic status, market age, are all recoverable from the NDC Directory and Orange Book.
+generic status, market age, are all recoverable from the Orange Book and FDA's product lifecycle
+file (NSDE).
 The GAO's 2025 assessment found 102
 active shortages as of July 2024 and noted that while the number of new shortages has generally
 declined since 2020, shortages are lasting longer [@gao2025coordination]. The persistence of the problem
@@ -32,8 +33,10 @@ unique active ingredients in shortage, represented by 1,961 products, with media
 years for injectables versus 1.6 years for orals and 2.2 years for topicals [@aspe2025shortages].
 Two things follow. First, it validates our choice of ingredient by route as the unit of
 analysis. Second, ASPE's
-published survival medians give us an external benchmark to validate our reconstructed duration
-estimates against.
+published survival medians give us an external benchmark for our reconstructed durations. Ours
+are closer together: a median of about 29 months for injectables against 26 for other routes
+(see [Exploration](eda.ipynb)). ASPE counts package codes rather than drugs and covers a
+different window, so the two aren't directly comparable.
 
 ## Other Literature on Prediction 
 
@@ -64,9 +67,12 @@ Two public GitHub projects attempt roughly this task on FDA data.
 
 `DengDuangLang111/Drug_Shortage_Prediction` [@dengduanglang2026] reconstructs history from 43
 monthly Internet Archive snapshots (2019-10 to 2026-04), producing a 27,896-row medicine-month
-panel and an 8,876-row training set with 60- and 90-day forward labels. This is close to our
-framing and confirms the reconstruction approach is sound. Its scope limit is that it covers only
-WHO Essential Medicines List molecules.
+panel and an 8,876-row training set with 60- and 90-day forward labels. It confirms the
+reconstruction approach is sound, but it covers only WHO Essential Medicines List molecules, and
+its labels count drugs already in shortage. Its results therefore mostly measure persistence: in
+its own published results, the one-line rule "in shortage in the prior six months" scores a
+ROC-AUC of 0.968, nearly matching its best model (0.979). We predict new onsets among drugs not
+already in shortage, a harder task that a persistence rule cannot solve.
 
 `Anirudh-Sohaney/medi-tracker` [@sohaney2026] provides an NDC9 per supplier per month panel of 254,316
 rows spanning 2012–2026. It is useful as a cross-check, but it is a duration panel rather than a
@@ -75,23 +81,23 @@ are backfilled rather than observed.
 
 ## The Modeling Gaps We Intend to Address:
 
- FDA purges resolved shortages after roughly six months; as of September 2026 the live file retained 7
-resolved records out of 1,634. Onset counts taken from the live file are severely length-biased.
-We reconstruct 10,967 episodes across 1,416 drugs from 102 archived captures, of which 2,028 carry
-resolution dates.
+FDA purges resolved shortages after roughly six months; in October 2026 the live file held 19
+resolved records out of 1,582, so onset counts taken from it are severely length-biased. We
+reconstruct 11,265 shortage episodes across 1,456 drug names from 124 archived captures, 2,048 of
+them with resolution dates, giving 161 drug-level shortage onsets from 2020 to 2025.
 
-FDA's NSDE file retains product records after delisting,
-where the current NDC Directory drops them. Historical shortage
-records point at products that have since been delisted, so joining them to the live directory
-discards more than half the data, and discards it non-randomly, i.e.  biased toward exactly the
-discontinued products a shortage model should care about. NSDE also enables a monthly count of
-active package codes per ingredient-route going back to 2010, which is what makes RQ1's
-leading-indicator question answerable at all.
+FDA's NSDE file retains product records after delisting, where the current NDC Directory drops
+them. Historical shortage records point at products that have since been delisted, so linking
+them through the live directory loses data non-randomly: it finds the package for 78% of ordinary
+shortage episodes but only 22% of discontinuations, exactly the cases a study of manufacturer
+exits cares about. NSDE also gives a count of packages on the market for every drug over time,
+which is what makes RQ3's leading-indicator question answerable at all. Its exit dates need care,
+since many are administrative (see [Exploration](eda.ipynb)).
 
-The prior public work restricts itself to WHO Essential
-Medicines List molecules. We work over the full approved prescription universe (2,897 ingredient
-per route units) which is both broader and, importantly, selected on criteria unrelated to
-perceived importance.
+The prior public work restricts itself to WHO Essential Medicines List molecules. We work over
+the full approved prescription universe (3,182 ingredient-by-route drugs defined from the Orange
+Book, about 2,000 on the market in a given year), which is both broader and, importantly,
+selected on criteria unrelated to perceived importance.
 
 Together these define the contribution: a shortage-onset analysis built on reconstructed labels
 over the complete approved prescription data, using supply-side product lifecycle signals that

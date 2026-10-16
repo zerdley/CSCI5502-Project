@@ -7,11 +7,14 @@ snapshot holds the full history. Lining up every snapshot recovers it.
 How it works:
   1. An episode is one presentation (a specific package from a specific company) going into
      shortage on a given posting date, identified by
-     (generic name, company, presentation, initial posting date).
+     (generic name, company, presentation, initial posting date). Rows with a blank or impossible
+     posting date still form episodes, with no posting date; dropping them would make a drug that
+     stays in shortage look as if it had left the list.
   2. Every row of every snapshot is matched to its episode; the episode is created the first time
      it is seen.
   3. Each sighting adds what that snapshot knows: when the episode was first and last seen, which
-     statuses it passed through, and, once a snapshot lists it as Resolved, its resolution date.
+     statuses it passed through, once a snapshot lists it as Resolved, its resolution date, and
+     the first capture listing it as To Be Discontinued.
 
 Episodes that open and close between two captures never appear, so short shortages are
 under-represented.
@@ -44,13 +47,17 @@ PLAUSIBLE_YEARS = range(2005, 2028)
 # A gap between captures longer than FDA's purge window can hide resolutions entirely.
 PURGE_WINDOW_DAYS = 183
 
+# A handful of rows are shifted by a column, leaving something else (e.g. a therapeutic category)
+# in Status. Rows without one of FDA's statuses are skipped.
+VALID_STATUSES = {"current", "resolved", "to be discontinued"}
+
 OUTPUT_COLUMNS = [
     "generic", "company", "presentation", "posted", "resolved_date", "discontinued_date",
     "duration_days", "resolved", "left_censored", "category", "reason",
-    "first_seen", "last_seen", "statuses",
+    "first_seen", "last_seen", "first_listed_discontinued", "statuses",
 ]
 
-EpisodeKey = tuple[str, str, str, datetime.date]
+EpisodeKey = tuple[str, str, str, datetime.date | None]
 
 
 @dataclass
@@ -58,13 +65,14 @@ class Episode:
     generic: str
     company: str
     presentation: str
-    posted: datetime.date
+    posted: datetime.date | None
     category: str
     reason: str
     first_seen: datetime.date
     last_seen: datetime.date
     resolved_date: datetime.date | None = None
     discontinued_date: datetime.date | None = None
+    first_listed_discontinued: datetime.date | None = None
     statuses: set[str] = field(default_factory=set)
 
     @property
@@ -73,7 +81,7 @@ class Episode:
 
     @property
     def duration_days(self) -> int | None:
-        if self.resolved_date is None or self.is_left_censored:
+        if self.resolved_date is None or self.posted is None or self.is_left_censored:
             return None
         return (self.resolved_date - self.posted).days
 
@@ -82,7 +90,7 @@ class Episode:
             "generic": self.generic,
             "company": self.company,
             "presentation": self.presentation,
-            "posted": self.posted.isoformat(),
+            "posted": self.posted.isoformat() if self.posted else None,
             "resolved_date": self.resolved_date.isoformat() if self.resolved_date else None,
             "discontinued_date":
                 self.discontinued_date.isoformat() if self.discontinued_date else None,
@@ -93,6 +101,9 @@ class Episode:
             "reason": self.reason,
             "first_seen": self.first_seen.isoformat(),
             "last_seen": self.last_seen.isoformat(),
+            "first_listed_discontinued":
+                self.first_listed_discontinued.isoformat()
+                if self.first_listed_discontinued else None,
             "statuses": "|".join(sorted(status for status in self.statuses if status)),
         }
 
@@ -134,9 +145,10 @@ def snapshot_date(path: Path) -> datetime.date:
 def record_sighting(episodes: dict[EpisodeKey, Episode], row: dict[str, str],
                     seen_on: datetime.date) -> None:
     """Fold one snapshot row into its episode, creating the episode on its first sighting."""
-    posted = parse_fda_date(row.get("Initial Posting Date"))
-    if posted is None:
+    status = row.get("Status", "")
+    if status.lower() not in VALID_STATUSES:
         return
+    posted = parse_fda_date(row.get("Initial Posting Date"))
 
     key = (row.get("Generic Name", ""), row.get("Company Name", ""),
            row.get("Presentation", ""), posted)
@@ -157,7 +169,6 @@ def record_sighting(episodes: dict[EpisodeKey, Episode], row: dict[str, str],
     episode.first_seen = min(episode.first_seen, seen_on)
     episode.last_seen = max(episode.last_seen, seen_on)
 
-    status = row.get("Status", "")
     episode.statuses.add(status)
 
     if not episode.category:
@@ -172,7 +183,10 @@ def record_sighting(episodes: dict[EpisodeKey, Episode], row: dict[str, str],
         if resolved_on and (episode.resolved_date is None or resolved_on < episode.resolved_date):
             episode.resolved_date = resolved_on
 
-    if status.lower().startswith("to be disc"):
+    if status.lower() == "to be discontinued":
+        if (episode.first_listed_discontinued is None
+                or seen_on < episode.first_listed_discontinued):
+            episode.first_listed_discontinued = seen_on
         discontinued_on = parse_fda_date(row.get("Date Discontinued"))
         if discontinued_on:
             episode.discontinued_date = discontinued_on
@@ -197,6 +211,7 @@ def print_episode_summary(episodes: list[Episode]) -> None:
     print(f"  with a RESOLUTION date        : {sum(e.resolved_date is not None for e in episodes)}")
     print(f"  with a computable duration    : {len(durations)}")
     print(f"  left-censored ('Prior to 2012'): {sum(e.is_left_censored for e in episodes)}")
+    print(f"  no usable posting date        : {sum(e.posted is None for e in episodes)}")
 
     if durations:
         def percentile(fraction):
@@ -205,7 +220,7 @@ def print_episode_summary(episodes: list[Episode]) -> None:
         print(f"  duration days  p25={percentile(.25)}  median={percentile(.5)}  "
               f"p75={percentile(.75)}  mean={sum(durations) // len(durations)}")
 
-    onsets_by_year = Counter(e.posted.year for e in episodes)
+    onsets_by_year = Counter(e.posted.year for e in episodes if e.posted)
     print("\n  episode onsets by year:")
     for year in sorted(onsets_by_year):
         if year >= 2012:

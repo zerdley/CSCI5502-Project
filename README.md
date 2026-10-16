@@ -31,7 +31,7 @@ is formally declared.
 1. How predictable is shortage onset?
 2. What distinguishes drugs that go into shortage?
 3. Do manufacturers exit before a shortage is declared?
-4. Does predictability hold as the causes of shortage change?
+4. Does predictability hold across types of drugs (sterile injectables vs oral drugs)?
 
 ## Data Sources
 
@@ -62,6 +62,10 @@ uv run python src/acquisition/download_bulk_files.py         # ~100 MB of bulk f
 uv run python src/acquisition/fetch_archived_shortages.py    # ~120 captures, ~12 min -> data/raw/cder_archive/
 uv run python src/acquisition/stitch_archived_shortages.py   # -> data/interim/shortage_episodes.csv
 uv run python src/cleaning/clean_shortage_episodes.py        # -> data/interim/*.parquet
+uv run python src/cleaning/map_episodes_to_units.py          # -> data/interim/units.parquet, episode_units.parquet
+uv run python src/cleaning/map_recalls_to_units.py           # -> data/interim/recall_units.parquet
+uv run python src/panel/build_unit_year_panel.py             # -> data/processed/unit_year_panel.parquet
+uv run python src/panel/add_features.py                      # -> data/processed/unit_year_features.parquet
 ```
 
 The archive fetch is throttled to one request every 6 seconds because the Internet Archive rate
@@ -77,8 +81,14 @@ archived captures. Short episodes that open and close between captures are not o
 
 ```
 .
-├── src/            # Analysis and data-acquisition code
-├── notebooks/      # Exploratory notebooks
+├── site/           # Website (Quarto); published notebooks live here as pages
+│   ├── data-pipeline.ipynb   # Pipeline and quality checks page
+│   └── eda.ipynb             # Exploration page
+├── src/
+│   ├── acquisition/  # Download bulk files, fetch archived FDA shortage lists, stitch episodes
+│   ├── cleaning/     # Clean episodes, define drug units, link episodes and recalls to units
+│   └── panel/        # Build the drug x year panel, its outcome, and its features
+├── notebooks/      # Working notebooks, not published
 ├── data/           # Local only; not committed
 │   ├── raw/        # Bulk downloads as retrieved
 │   ├── interim/    # Intermediate artifacts
@@ -87,22 +97,31 @@ archived captures. Short episodes that open and close between captures are not o
 └── milestones/     # Instructor-provided milestone specifications
 ```
 
+Published notebooks (e.g. `site/data-pipeline.ipynb`) are rendered from their saved outputs, since
+the website build has no data. After changing one, re-run it from `site/` with the data in place
+(`uv run jupyter nbconvert --to notebook --execute --inplace <notebook>`) and commit it with its
+outputs.
+
 ## Development Setup
 
 This project uses [uv](https://docs.astral.sh/uv/) for Python environment management. It installs
 the pinned Python version automatically; no separate Python install is needed.
 
 ```bash
-uv sync                   
-uv run python <script>
+uv sync                                # install the pinned Python and dependencies
+uv run python <script>                 # run any script in the project environment
+quarto preview site                    # live preview of the website
 ```
+
+The website uses [Quarto](https://quarto.org). The full data pipeline and its run order are under
+[Data Acquisition](#data-acquisition) above.
 
 ## Milestones/Roadmap
 
 | Milestone | Focus | Status |
 |---|---|---|
 | **M0** | Proposal: problem, data sources, feasibility and ethics | ✅ Approved |
-| **M1** | Project framing, research questions, team, repository, website | 🚧 In progress |
-| **M2** | _TBD_ | — |
+| **M1** | Project framing, research questions, team, repository, website | ✅ Complete |
+| **M2** | Data acquisition, preparation and exploration | 🚧 In progress |
 | **M3** | _TBD_ | — |
 | **M4** | _TBD_ | — |

@@ -26,7 +26,8 @@ EPISODES_PATH = INTERIM_DATA_DIR / "shortage_episodes.csv"
 CLEAN_EPISODES_PATH = INTERIM_DATA_DIR / "shortage_episodes_clean.parquet"
 EPISODE_NDCS_PATH = INTERIM_DATA_DIR / "shortage_episode_ndcs.parquet"
 
-DATE_COLUMNS = ["posted", "resolved_date", "discontinued_date", "first_seen", "last_seen"]
+DATE_COLUMNS = ["posted", "resolved_date", "discontinued_date", "first_seen", "last_seen",
+                "first_listed_discontinued"]
 
 STATUS_SPELLINGS = {
     "current": "Current",
