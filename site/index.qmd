@@ -72,8 +72,10 @@ deduplicated into new shortages, they give 161 shortage onsets from 2020 to 2025
 {{< embed eda.ipynb#fig-onsets >}}
 
 @fig-onsets shows the result. Our yearly counts match the number of new drug shortages FDA
-reports to Congress for the years it covers, including the sharp fall after 2023, which is the
-strongest check that the reconstruction captures what FDA itself counts. The details, and every
+reports to Congress for the years it covers [@fdacy2023; @fdacy2024; @fdacy2025], including
+the sharp fall after 2023, which is the strongest check that the reconstruction captures what FDA
+itself counts. Each report is published the year after the one it covers, so the 2023 count comes
+from the 2024 report. The details, and every
 check along the way, are on the [Pipeline and Quality Checks](data-pipeline.ipynb) page.
 
 ## Project Plan
