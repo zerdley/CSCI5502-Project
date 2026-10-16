@@ -5,7 +5,7 @@ title: "Data"
 ## Data Provenance and Acquisition
 
 All sources are US federal public-domain data, available as bulk downloads without
-authentication. The total download is approximately 100 MB.
+authentication, and total about 100 MB.
 
 | Dataset | Provider | Access | Role in this project |
 |---|---|---|---|
@@ -17,27 +17,27 @@ authentication. The total download is approximately 100 MB.
 | NDC Directory | openFDA | `download.open.fda.gov/drug/ndc/` | Bias check only |
 | Medicare Part B / Part D Spending | CMS | `data.cms.gov` | Downloaded; deferred until it can be linked to drugs reliably |
 
-@tbl-sources gives, for each source, what one row represents, how many rows it has, the period it
+@tbl-sources gives, for each source, what one row represents, its row count, the period it
 covers, its size, and when we downloaded it.
 
 {{< embed data-pipeline.ipynb#tbl-sources >}}
 
 ### Why these sources, and what they can't tell us
 
-- **The archived shortage list** is the only public record of past shortages, because FDA's own
+- The archived shortage list is the only public record of past shortages, because FDA's own
   file keeps only current ones. It can't show shortages that started and ended between two
   archive captures, it starts in October 2019, and it has no true onset date, only when FDA
   listed a shortage.
-- **NSDE** keeps every package ever marketed, including discontinued ones, which is what lets us
+- NSDE keeps every package ever marketed, including discontinued ones, which is what lets us
   see manufacturers leaving a market. It covers US-marketed packages only, so problems at foreign
   ingredient or manufacturing plants are invisible, and many of its exit dates are
   administrative.
-- **The Orange Book** lists approved drugs, including discontinued ones, which makes it a
+- The Orange Book lists approved drugs, including discontinued ones, which makes it a
   defensible list of drugs that could go short. It doesn't cover biologics (listed in FDA's Purple
   Book) or unapproved drugs, and it doesn't date approvals before 1982.
-- **Recalls** link to drugs for about 30% of records; most of the rest are compounded,
+- Recalls link to drugs for about 30% of records; most of the rest are compounded,
   over-the-counter, or unapproved products, outside our scope.
-- **None of these sources** contains prices, inventory, or demand, the factors economic analyses
+- None of these sources contains prices, inventory, or demand, the factors economic analyses
   identify as root causes.
 
 ### Acquisition
@@ -46,11 +46,11 @@ Raw and intermediate data are not committed to the
 [repository](https://github.com/zerdley/CSCI5502-Project) (see `.gitignore`), but every step can be
 reproduced with the commands in the repository README. The bulk files are direct downloads; the
 archived shortage list is fetched from the Internet Archive's index of captures, one request every
-six seconds as its rate limits require. The pipeline and the checks on each step are on the
+six seconds to respect its rate limits. The pipeline and the checks on each step are on the
 [Pipeline and Quality Checks](data-pipeline.ipynb) page.
 
 **Licensing.** openFDA and CDER data are public domain (CC0) and may be freely redistributed.
-ASHP / University of Utah shortage bulletins are copyrighted for personal use only and are **not**
+ASHP / University of Utah shortage bulletins are copyrighted for personal use only, and are not
 used or redistributed in this project.
 
 ## Quality, Bias, and Ethics
@@ -59,26 +59,26 @@ used or redistributed in this project.
 
 | Risk | Status after working with the data |
 |---|---|
-| FDA's live file is only a snapshot | **Confirmed, and worked around.** The archive reconstruction recovers 161 shortage onsets for 2020–2025, and they match FDA's own counts of new drug shortages for the years FDA reports. |
-| Short shortages are under-represented | **Confirmed.** Captures are sparse in 2019 and 2021–2023, and two gaps exceed FDA's six-month purge window. Shortages that opened and closed inside a gap are missing. |
-| Target leakage | **Confirmed and guarded against.** A fixed list of excluded features, now including FDA's stated reason for a shortage, which is only known after a shortage starts. |
-| Shortage causes change over time | **Can't be tested in our window.** The years FDA described as dominated by quality problems come before the archive begins, and about half of FDA's listings give no usable cause. Research question 4 was revised as a result. |
-| Licensing | **No issue.** All data used is public domain. |
+| FDA's live file is only a snapshot | Confirmed, and worked around. The archive reconstruction recovers 161 shortage onsets for 2020–2025, matching FDA's own counts of new drug shortages for the years FDA reports. |
+| Short shortages are under-represented | Confirmed. Captures are sparse in 2019 and 2021–2023, and two gaps exceed FDA's six-month purge window. Shortages that opened and closed inside a gap are missing. |
+| Target leakage | Confirmed and guarded against. A fixed list of excluded features, now including FDA's stated reason for a shortage, which is only known after a shortage starts. |
+| Shortage causes change over time | Can't be tested in our window. The years FDA described as dominated by quality problems come before the archive begins, and about half of FDA's listings give no usable cause. Research question 4 was revised as a result. |
+| Licensing | No issue. All data used is public domain. |
 
 ### Newly discovered issues
 
-- **The archive starts in October 2019**, so the outcome can only be built for 2020 to 2025.
-- **New shortages are rare and fell sharply after 2023** (11 in 2024, 3 in 2025), which FDA's
-  own reports confirm. This leaves about 160 onsets in all, and too few in 2024 and 2025 to test a
+- The archive starts in October 2019, so the outcome can only be built for 2020 to 2025.
+- New shortages are rare and fell sharply after 2023 (11 in 2024, 3 in 2025), which FDA's
+  own reports confirm. This leaves about 160 onsets in all, too few in 2024 and 2025 to test a
   model on those years alone.
-- **FDA's posting date is often years older than the listing**, mostly because FDA rewrites
+- FDA's posting date is often years older than the listing, mostly because FDA rewrites
   existing rows, so the pipeline dates a shortage by when the archive confirms it.
-- **The live NDC Directory would have biased the study** toward drugs still on the market; it
+- The live NDC Directory would have biased the study toward drugs still on the market; it
   finds only 22% of discontinuation records. The pipeline links through NSDE and the Orange Book
   instead, which reach 92% to 95% of both kinds.
-- **NSDE's exit dates are largely administrative**, clustering on a few dates a year, so the
+- NSDE's exit dates are largely administrative, clustering on a few dates a year, so the
   timing of manufacturer exits is approximate.
-- **About 6% of shortage records can't be linked to a drug**, mostly biologics and unapproved
+- About 6% of shortage records can't be linked to a drug, mostly biologics and unapproved
   drugs, which are outside the study's scope.
 
 ### The limitation we can't fix
