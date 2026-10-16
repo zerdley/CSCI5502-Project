@@ -1,6 +1,10 @@
 ---
 title: "Predicting US Drug Shortages"
 subtitle: "Can federal supply-side data warn us before a drug runs short?"
+notebook-view:
+  - notebook: eda.ipynb
+    title: "Exploration"
+    url: eda.html
 ---
 
 ## The Problem
