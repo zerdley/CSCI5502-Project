@@ -24,6 +24,12 @@ website:
             text: Pipeline and Quality Checks
           - href: eda.ipynb
             text: Exploration
+      - text: Models and Evaluation
+        menu:
+          - href: models.qmd
+            text: Summary
+          - href: modeling.ipynb
+            text: Modeling Notebook
       - href: team.qmd
         text: Team
     right:

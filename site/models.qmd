@@ -1,0 +1,129 @@
+---
+title: "Models and Evaluation"
+subtitle: "How predictable is shortage onset, and which choices matter?"
+---
+
+This page summarizes the Milestone 3 modeling. The full analysis, with code, tuning details,
+feature ablation, calibration, subgroup results, and error analysis, is on the
+[Modeling Notebook](modeling.ipynb) page.
+
+## Modeling question
+
+Using only what is known at the end of year *t*−1, how well can drugs be ranked by their risk of a
+new shortage onset in year t? This is RQ1, and the same models are then used to answer the
+other three [research questions](questions.qmd):
+
+| Research question | What is modeled |
+|---|---|
+| RQ1: How predictable is onset? | Each at-risk drug's risk of a new shortage next year, used as a ranking (a watchlist) |
+| RQ2: What distinguishes drugs that go short? | Logistic-regression odds ratios, and performance as feature groups are added |
+| RQ3: Do manufacturers exit first? | Whether exit features add predictive value beyond the others (a predictive test, not yet the planned event study) |
+| RQ4: Does it hold across drug types? | The same predictions scored within injectable and oral drugs, and transfer from one group to the other |
+
+**Data:** One row per drug (ingredient per route) per year, 2020–2025, restricted to drugs on the
+market and not already in shortage on January 1: about 11,500 at-risk drug-years with only 161
+onsets (about 1.8%). Predicting that a running shortage continues is easy and useless, so those
+rows are excluded.
+
+**Features:** (13, all measured as of December 31 of *t*−1): route group, years since first
+approval, an approved-before-1982 flag, packages, approvals, and manufacturers on the market, a
+prior-shortage flag, prior-year recalls, and four prior-year exit measures. Anything known only
+once a shortage exists (FDA's stated reason, days since posting) is banned as source of leakage.
+
+## Methods and rationale
+
+| Model | Role | Why it is here |
+|---|---|---|
+| **Prior shortage** | Baseline | Promised in the research questions: flag drugs with an earlier shortage |
+| **Route rate** | Baseline | Each drug gets its route group's training-year onset rate; route is the largest single difference found in exploration |
+| **Logistic regression** (L2) | Candidate | Few parameters, stable with about 100 positives, and its coefficients answer RQ2 directly. Counts are log-transformed because they are heavily skewed. |
+| **Random forest** | Candidate | Finds thresholds and interactions (e.g. age mattering more for injectables) without hand-built terms; indifferent to skew |
+| **Gradient-boosted trees** | Candidate | The same strengths as the forest, fit sequentially; tested because it is often the strongest tabular learner |
+
+
+## Evaluation design
+
+{{< embed modeling.ipynb#fig-validation-design >}}
+
+- **Rolling-origin validation- never random splits.** Each test year (2021,2022, 2023) is
+  predicted by a model trained on all earlier years. Random  k-fold would train on 2023 to predict
+  2021, leaking the later base rate and the later meaning of shortage history.
+- **Nested tuning: ** Hyperparameters are chosen by the same rolling scheme inside the training
+  years only. The 2021 fold has one training year, so it uses defaults fixed in advance.
+- **Pooled scoring:** The three test years are pooled into 5,700 drug-years with 103 onsets.
+  2024–2025 (14 onsets, after the rate of  new shortages collapsed) are a separate robustness check, not used
+  for model selection.
+- **Metrics:** PR-AUC compared with the 1.8% base rate is primary, because at this base rate
+  ROC-AUC can look respectable while the top of the list is mostly false alarms. ROC-AUC, onsets
+  caught by a 50-drug watchlist each year, and calibration (Brier skill score, reliability plot)
+  are reported alongside. Accuracy and F1 are not reported: at a 0.5 threshold every model
+  predicts "no," and doing nothing scores 98% accuracy.
+- **Uncertainty: ** 95% intervals come from 1,000 bootstrap resamples of whole drugs (the same
+  drug appears in several years), and model differences are paired on the same resamples.
+
+## Key results
+
+{{< embed modeling.ipynb#fig-model-comparison >}}
+
+| Model | PR-AUC (95% interval) | × base rate | ROC-AUC (95% interval) | PR-AUC vs logistic regression | Onsets in top 50 (of 103) |
+|---|---|---|---|---|---|
+| Prior shortage (baseline) | 0.024 (0.018–0.034) | 1.4 | 0.55 (0.52–0.59) | −0.017 (−0.033 to −0.008) | 5 |
+| Route rate (baseline) | 0.031 (0.023–0.040) | 1.7 | 0.66 (0.61–0.71) | −0.011 (−0.026 to −0.003) | 5 |
+| **Logistic regression** | **0.041 (0.031–0.060)** | **2.3** | **0.72 (0.67–0.76)** | — | 6 |
+| Random forest | 0.037 (0.028–0.053) | 2.1 | 0.70 (0.65–0.75) | −0.004 (−0.016 to +0.006) | 10 |
+| Gradient boosting | 0.032 (0.025–0.043) | 1.8 | 0.68 (0.63–0.73) | −0.009 (−0.022 to −0.001) | 7 |
+
+: Pooled test years 2021–2023 (5,700 drug-years, 103 onsets, base rate 1.81%). A random 50-drug
+watchlist would catch about 3 onsets over the three years. {#tbl-comparison}
+
+- Onsets are modestly predictable: Every candidate beats both baselines. Logistic regression
+  is best on both summary metrics (PR-AUC 2.3× the base rate, ROC-AUC 0.72), and its riskiest 20%
+  of drugs each year contain about half of the onsets (52 of 103).
+- The candidates can't be separated reliably: Logistic regression's lead over the random
+  forest has an interval spanning 0, and the best model changes from year to year. Its lead over
+  gradient boosting is small but excludes 0.
+- Precision at the top is low for everyone: a 50-drug watchlist is right 4% to 7% of the time.
+- Selected model: L2 logistic regression (`C` = 0.3 once tuning had data). It ties or beats
+  the trees on every ranking metric, has better-calibrated probabilities, is the simplest to
+  reproduce, and is interpretable.
+
+ So, where is the signal? Adding feature groups one at a time shows that route, drug
+age, and the pre-1982 flag alone reach the full model's performance (PR-AUC 0.042, ROC-AUC 0.72).
+Market size, history and quality, and exits each change PR-AUC by at most 0.002, with every
+interval spanning 0.
+
+{{< embed modeling.ipynb#fig-coefficients >}}
+
+**Robustness checks.**
+
+- Calibration: In 2021–2023 probabilities are roughly right but a little high (2.3% predicted
+  vs 1.8% observed), and the Brier skill score is barely above 0 (0.007): the value is in the
+  ranking. After 2023 the ranking held (ROC-AUC 0.82 in 2024, on 11 onsets) but every model
+  predicted about 2% risk when the real rate fell to 0.56% (2024) and 0.15% (2025).
+- Injectable vs oral: Within each group ranking is weaker (ROC-AUC 0.61 for injectables, 0.66
+  for oral drugs, intervals overlapping), and a model trained on one group ranks the other about
+  as well as a model trained on it.
+
+## Interpretation
+
+- **RQ1.** Shortage onset is predictable a year ahead, but only modestly, and mostly from route
+  and drug age. A ranked watchlist concentrates risk; it does not pinpoint which drugs will go short.
+- **RQ2.** Holding the other features fixed, injectables have about 3.4 times the odds of oral
+  drugs, each 10 years since first approval raises the odds about 43%, and a prior shortage about
+  65%. Market size and number of manufacturers show no clear effect once route and age are known.
+  These are associations: route and age mark a kind of market (old, low-margin sterile
+  manufacturing), not causes.
+- **RQ3.** Year-level exits in NSDE add no predictive value. That is not evidence that exits
+  don't matter: NSDE exit dates lag and are often administrative, and an effect confined to small
+  markets wouldn't move pooled metrics. The planned event study is still needed.
+- **RQ4.** Predictability is similarly modest for injectable and oral drugs, and the pattern
+  transfers between them.
+- **Misses and Failure Modes ** False alarms are the textbook shortage profile, old generic
+  injectables that usually don't go short in a given year (though 9.7% of them did in a later year,
+  against 2.1% of other drugs). Missed onsets are newer, often brand-name oral drugs hit by acute
+  shocks such as the ADHD stimulant demand surge or impurity recalls, which these supply-side
+  features can't see.
+
+Possible next steps: The RQ3 event study focused on small markets, resetting probabilities to a
+current base rate, and demand-side features (Medicare spending, if it can be linked) for the
+acute shortages the model misses. Demand side features would be our preferred next avenue of investigation. 
