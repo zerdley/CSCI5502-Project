@@ -45,7 +45,7 @@ once a shortage exists (FDA's stated reason, days since posting) is banned as so
 
 {{< embed modeling.ipynb#fig-validation-design >}}
 
-- **Rolling-origin validation- never random splits.** Each test year (2021,2022, 2023) is
+- **Rolling-origin validation:** Each test year (2021,2022, 2023) is
   predicted by a model trained on all earlier years. Random  k-fold would train on 2023 to predict
   2021, leaking the later base rate and the later meaning of shortage history.
 - **Nested tuning: ** Hyperparameters are chosen by the same rolling scheme inside the training
@@ -106,17 +106,17 @@ interval spanning 0.
 
 ## Interpretation
 
-- **RQ1.** Shortage onset is predictable a year ahead, but only modestly, and mostly from route
+- **RQ1-** Shortage onset is predictable a year ahead, but only modestly, and mostly from route
   and drug age. A ranked watchlist concentrates risk; it does not pinpoint which drugs will go short.
-- **RQ2.** Holding the other features fixed, injectables have about 3.4 times the odds of oral
+- **RQ2-.** Holding the other features fixed, injectables have about 3.4 times the odds of oral
   drugs, each 10 years since first approval raises the odds about 43%, and a prior shortage about
   65%. Market size and number of manufacturers show no clear effect once route and age are known.
   These are associations: route and age mark a kind of market (old, low-margin sterile
   manufacturing), not causes.
-- **RQ3.** Year-level exits in NSDE add no predictive value. That is not evidence that exits
+- **RQ3-** Year-level exits in NSDE add no predictive value. That is not evidence that exits
   don't matter: NSDE exit dates lag and are often administrative, and an effect confined to small
   markets wouldn't move pooled metrics. The planned event study is still needed.
-- **RQ4.** Predictability is similarly modest for injectable and oral drugs, and the pattern
+- **RQ4-** Predictability is similarly modest for injectable and oral drugs, and the pattern
   transfers between them.
 - **Misses and Failure Modes ** False alarms are the textbook shortage profile, old generic
   injectables that usually don't go short in a given year (though 9.7% of them did in a later year,
